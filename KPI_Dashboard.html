@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPI Dashboard — ME & Logistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+:root {
+  --dark: #1F3864;          /* Yanfeng dark navy */
+  --mid:  #2E75B6;          /* Yanfeng medium blue */
+  --light: #D9E1F2;         /* Yanfeng light blue tint */
+  --accent: #E8A020;
+  --green: #00875A;
+  --green-light: #36B37E;
+  --green-dim: rgba(0,135,90,0.10);
+  --red:   #DE350B;
+  --red-dim: rgba(222,53,11,0.10);
+  --amber: #FF8B00;
+  --amber-dim: rgba(255,139,0,0.10);
+  --bg:    #EEF2F7;
+  --bg-elevated: #FFFFFF;
+  --bg-input: #F5F8FC;
+  --bg-table-stripe: #F8FAFC;
+  --card:  #FFFFFF;
+  --text:  #0F172A;
+  --text-secondary: #4A6080;
+  --muted: #6B7280;
+  --border: #D5DEE9;
+  --border-strong: #A8BBD0;
+  --purple: #5D3FD3;
+  --shadow-md: 0 4px 12px rgba(31,56,100,0.08);
+  --shadow-lg: 0 12px 32px rgba(31,56,100,0.12);
+  --shadow-sm: 0 2px 6px rgba(31,56,100,0.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100vh}
+body{font-family:'IBM Plex Sans','Inter','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#1F3864 0%,#2E5090 50%,#2E75B6 100%);color:white;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(31,56,100,.25);position:sticky;top:0;z-index:200;border-bottom:3px solid rgba(255,255,255,.08)}
+.header-left h1{font-size:19px;font-weight:600;letter-spacing:.2px}
+.header-left .sub{font-size:11px;opacity:.78;margin-top:3px;font-weight:400}
+.header-right{display:flex;gap:8px;align-items:center}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600}
+.badge.accent{background:var(--accent);border-color:var(--accent)}
+.badge.warn{background:rgba(192,57,43,.7);border-color:rgba(192,57,43,.5)}
+
+/* TABS */
+.tab-bar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 32px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 3px rgba(31,56,100,.04)}
+.tab-group{display:flex;background:#EEF2F7;border-radius:10px;padding:4px;gap:2px}
+.tab{padding:8px 22px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .15s;letter-spacing:.2px}
+.tab.active{background:linear-gradient(135deg,#1F3864,#2E5090);color:white;box-shadow:0 2px 6px rgba(31,56,100,.25)}
+.tab:hover:not(.active){background:white;color:var(--dark)}
+.tab-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{padding:7px 16px;font-size:12px;font-weight:600;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--light);border-color:var(--mid);color:var(--dark)}
+.btn.primary{background:var(--dark);color:white;border-color:var(--dark)}
+.btn.primary:hover{background:var(--mid)}
+.btn.danger{background:var(--red);color:white;border-color:var(--red)}
+.btn.green-btn{background:var(--green);color:white;border-color:var(--green)}
+
+/* MAIN */
+.main{padding:18px 32px;display:flex;flex-direction:column;gap:16px}
+.sl{display:none}.sl.on{display:flex;flex-direction:column;gap:16px}
+
+/* KPI CARDS */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi-card{background:var(--card);border-radius:12px;padding:18px 22px;border:1px solid var(--border);display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .2s,border-color .2s;box-shadow:var(--shadow-sm)}
+.kpi-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);border-color:var(--border-strong)}
+.kpi-card.sl-excellent{background:linear-gradient(135deg,#E8F8F0 0%,#D5F5E3 100%);border-color:#00875A}
+.kpi-card.sl-good{background:linear-gradient(135deg,#F0FAF4 0%,#E8F8F0 100%);border-color:#36B37E}
+.kpi-card.sl-warning{background:linear-gradient(135deg,#FFF9EE 0%,#FEF3CD 100%);border-color:#FF8B00}
+.kpi-card.sl-danger{background:linear-gradient(135deg,#FFF3F0 0%,#FDEDEC 100%);border-color:#DE350B}
+.kpi-card.sl-excellent .kpi-label{color:#1a7a42}
+.kpi-card.sl-good .kpi-label{color:#1e8449}
+.kpi-card.sl-warning .kpi-label{color:#9A6000}
+.kpi-card.sl-danger .kpi-label{color:#922B21}
+.kpi-card.sl-excellent::before{background:#27AE60!important}
+.kpi-card.sl-good::before{background:#82E0AA!important}
+.kpi-card.sl-warning::before{background:#F39C12!important}
+.kpi-card.sl-danger::before{background:#C0392B!important}
+.kpi-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:10px 0 0 10px}
+.kpi-card.blue::before{background:var(--mid)}
+.kpi-card.green::before{background:var(--green)}
+.kpi-card.red::before{background:var(--red)}
+.kpi-card.amber::before{background:var(--amber)}
+.kpi-card.purple::before{background:var(--purple)}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.kpi-value{font-size:30px;font-weight:800;line-height:1.1}
+.kpi-value.cv-green{color:#1a5e32}.kpi-value.cv-red{color:#7B241C}.kpi-value.cv-amber{color:#7D6608}.kpi-value.cv-blue{color:var(--mid)}
+.kpi-sub{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.mini-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700}
+.mb-g{background:rgba(255,255,255,.6);color:#1a5e32}.mb-r{background:rgba(255,255,255,.6);color:#7B241C}.mb-a{background:rgba(255,255,255,.6);color:#7D6608}.mb-n{background:rgba(255,255,255,.5);color:var(--muted)}
+.mb-pending{background:#FFF3E0;color:#E65100}
+.kpi-hint{font-size:10px;color:var(--muted);margin-top:1px}
+.evidence-flag{position:absolute;top:10px;right:42px;font-size:16px;cursor:pointer}
+
+/* LOGIN SCREEN */
+.login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#1B3A5C 0%,#2E6DA4 100%);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:white;border-radius:14px;padding:36px 40px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo h1{font-size:22px;font-weight:800;color:var(--dark);margin-bottom:4px}
+.login-logo p{font-size:12px;color:var(--muted)}
+.login-field{margin-bottom:16px}
+.login-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+.login-input{width:100%;font-size:14px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);transition:border-color .15s}
+.login-input:focus{outline:none;border-color:var(--mid);background:white}
+.login-btn{width:100%;padding:11px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:var(--dark);color:white;cursor:pointer;margin-top:8px;transition:background .15s}
+.login-btn:hover{background:var(--mid)}
+.login-error{background:#FDEDEC;border:1px solid #F1948A;border-radius:8px;padding:10px 14px;font-size:12px;color:#922B21;font-weight:600;margin-bottom:12px;display:none}
+.login-error.show{display:block}
+.logout-btn{padding:6px 14px;font-size:11px;font-weight:600;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:white;cursor:pointer;transition:background .15s;margin-left:8px}
+.logout-btn:hover{background:rgba(255,255,255,.25)}
+.current-user-badge{font-size:11px;color:white;background:rgba(255,255,255,.15);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.3)}
+
+
+
+/* PEOPLE DEVELOPMENT */
+.pd-panel{margin-top:8px}
+.pd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:10px}
+.pd-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:box-shadow .15s,border-color .15s;position:relative;border-left:3px solid #5D3FD3}
+.pd-card:hover{box-shadow:0 3px 12px rgba(93,63,211,.15);border-color:#7A5CE0}
+.pd-card.pd-green{border-left-color:#27AE60}
+.pd-card.pd-amber{border-left-color:#F39C12}
+.pd-card.pd-red{border-left-color:#C0392B}
+.pd-card.pd-gray{border-left-color:#95A5A6}
+.pd-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
+.pd-sub{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.3}
+.pd-value{font-size:26px;font-weight:800;color:var(--text);margin-bottom:6px}
+.pd-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.pd-band-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.pd-band-badge.pd-green{background:#EAFAF1;color:#27AE60}
+.pd-band-badge.pd-amber{background:#FEF3CD;color:#7D6608}
+.pd-band-badge.pd-red{background:#FDEDEC;color:#C0392B}
+.pd-band-badge.pd-gray{background:var(--bg);color:var(--muted)}
+.pd-target{font-size:10px;color:var(--muted)}
+.pd-ev{font-size:10px}
+.pd-note{font-size:11px;color:var(--muted);font-style:italic;padding:8px 12px;background:#FAF6FF;border:1px solid #E7DDFF;border-radius:8px}
+.pd-breakdown{font-size:10px;color:var(--muted);background:var(--bg);padding:4px 8px;border-radius:6px;margin-bottom:6px;line-height:1.4}
+.pd-input{width:100%;font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-weight:600}
+.pd-input:focus{outline:none;border-color:#5D3FD3;background:white}
+
+
+/* PD MODAL STATE */
+.modal.pd-state-green{background:#E8F8F0;border:2px solid #27AE60}
+.modal.pd-state-red{background:#FDEDEC;border:2px solid #C0392B}
+.modal.pd-state-gray{background:var(--card)}
+.modal.pd-state-green .pd-input,.modal.pd-state-green input,.modal.pd-state-green select,.modal.pd-state-green textarea{background:#ffffff}
+.modal.pd-state-red .pd-input,.modal.pd-state-red input,.modal.pd-state-red select,.modal.pd-state-red textarea{background:#ffffff}
+
+
+/* YANFENG-INSPIRED RAG LEGEND */
+.rag-legend-panel{background:white;border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);margin-top:8px}
+.rag-legend-header{background:linear-gradient(135deg,#1F3864 0%,#2E5090 100%);color:white;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.rag-legend-header h3{font-size:14px;font-weight:600;letter-spacing:.3px;margin:0;display:flex;align-items:center;gap:10px}
+.rag-legend-header .badge-info{font-size:11px;opacity:.85;font-weight:400}
+.rag-legend-body{padding:24px 28px}
+.rag-legend-intro{font-size:13px;color:var(--text-secondary);margin-bottom:18px;line-height:1.6}
+.rag-scale{display:flex;height:54px;border-radius:10px;overflow:hidden;margin-bottom:8px;box-shadow:inset 0 1px 3px rgba(0,0,0,.1)}
+.rag-zone{display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;font-weight:600;position:relative;transition:flex .2s}
+.rag-zone-label{font-size:13px;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+.rag-zone-desc{font-size:10px;opacity:.92;margin-top:3px;font-weight:400;letter-spacing:.5px;text-transform:uppercase}
+.rag-axis{display:flex;justify-content:space-between;padding:0 4px;font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:24px}
+.rag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px}
+.rag-card{background:var(--bg-input);border-radius:10px;padding:14px 16px;border-left:4px solid var(--green);transition:transform .15s,box-shadow .2s}
+.rag-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.rag-card.zone-green{border-left-color:var(--green);background:linear-gradient(135deg,#F0FAF4 0%,#E8F8F0 100%)}
+.rag-card.zone-amber{border-left-color:var(--amber);background:linear-gradient(135deg,#FFF8EE 0%,#FEF3CD 100%)}
+.rag-card.zone-red{border-left-color:var(--red);background:linear-gradient(135deg,#FFF3F0 0%,#FDEDEC 100%)}
+.rag-card-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rag-icon{font-size:18px}
+.rag-card-title{font-size:13px;font-weight:600;color:var(--text)}
+.rag-card-value{font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.7)}
+.rag-card-desc{font-size:11px;color:var(--text-secondary);line-height:1.5}
+.rag-modifier-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.rag-mod-card{background:white;border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;border-left:4px solid var(--mid)}
+.rag-mod-icon{font-size:22px;line-height:1}
+.rag-mod-text{flex:1;font-size:12px;line-height:1.5;color:var(--text-secondary)}
+.rag-mod-text strong{color:var(--text)}
+
+
+
+/* ─── LEGENDA TAB ──────────────────────────────────────────────────── */
+.legenda-wrap{max-width:1100px;margin:0 auto}
+.legenda-intro{background:linear-gradient(135deg,#1F3864 0%,#2E5090 100%);color:white;border-radius:14px;padding:24px 28px;margin-bottom:24px;box-shadow:0 4px 16px rgba(31,56,100,.18)}
+.legenda-intro h2{font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:.3px}
+.legenda-intro p{font-size:13px;opacity:.92;line-height:1.6;margin:0}
+.legenda-section{background:white;border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin-bottom:18px;box-shadow:0 2px 8px rgba(31,56,100,.06)}
+.leg-section-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--sec-color,var(--mid))}
+.leg-section-icon{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-size:22px;color:white;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.leg-section-head h3{font-size:18px;font-weight:600;color:#0F172A;margin:0;letter-spacing:.2px}
+.leg-section-head .sec-sub{font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.legenda-section > p{color:#4A6080;font-size:13px;line-height:1.7;margin:0 0 14px}
+
+/* KPI deep-dive cards */
+.kpi-deep{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px}
+.kpi-deep-card{background:#F5F8FC;border-radius:10px;padding:16px 18px;border-left:4px solid var(--mid);transition:transform .15s,box-shadow .2s}
+.kpi-deep-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(31,56,100,.12)}
+.kpi-deep-name{font-size:13px;font-weight:600;color:#0F172A;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.kpi-deep-name .kpi-emoji{font-size:16px}
+.kpi-deep-sub{font-size:11px;color:#4A6080;line-height:1.5;margin-bottom:10px;font-style:italic}
+.kpi-deep-rows{display:flex;flex-direction:column;gap:5px;font-size:11px;line-height:1.5}
+.kpi-deep-row{display:grid;grid-template-columns:90px 1fr;gap:6px;align-items:start}
+.kpi-deep-label{font-weight:600;color:#4A6080;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding-top:1px}
+.kpi-deep-value{color:#0F172A;font-size:11px}
+.kpi-deep-value strong{color:#1F3864}
+.kpi-deep-thresholds{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.thr-pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:8px;background:white;border:1px solid var(--border);font-family:'IBM Plex Mono',monospace}
+.thr-pill.green{background:#E8F8F0;color:#00875A;border-color:#36B37E}
+.thr-pill.amber{background:#FFF8EE;color:#FF8B00;border-color:#FF8B00}
+.thr-pill.red{background:#FFF3F0;color:#DE350B;border-color:#DE350B}
+
+/* Formula visual */
+.leg-formula{background:linear-gradient(135deg,#EEF2F7 0%,#F5F8FC 100%);border:1px solid var(--border);border-radius:10px;padding:18px;margin:14px 0;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:600}
+.formula-box{background:white;padding:10px 16px;border-radius:8px;border:2px solid var(--mid);color:var(--dark);font-family:'IBM Plex Mono',monospace}
+.formula-op{font-size:18px;color:var(--mid);font-weight:700}
+.formula-result{background:#1F3864;color:white;padding:10px 18px;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-weight:600;box-shadow:0 2px 6px rgba(31,56,100,.2)}
+
+/* Process steps */
+.leg-process{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.leg-step{background:white;border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;display:flex;flex-direction:column;gap:6px}
+.leg-step-num{position:absolute;top:-10px;left:14px;width:24px;height:24px;background:var(--mid);color:white;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.leg-step-title{font-size:12px;font-weight:600;color:#0F172A;margin-top:4px}
+.leg-step-desc{font-size:11px;color:#4A6080;line-height:1.5}
+
+/* Roles & access */
+.leg-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+.leg-role-card{background:white;border:1px solid var(--border);border-radius:10px;padding:14px 16px;border-left:4px solid #5D3FD3;display:flex;flex-direction:column;gap:5px}
+.leg-role-name{font-size:13px;font-weight:600;color:#0F172A;display:flex;align-items:center;gap:6px}
+.leg-role-access{font-size:11px;color:#4A6080;line-height:1.4}
+.leg-role-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:#EBF5FB;color:#1F3864;margin-top:4px;width:fit-content;font-family:'IBM Plex Mono',monospace}
+
+/* Evidence cards */
+.leg-evidence{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
+.leg-ev-card{background:white;border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.leg-ev-icon{font-size:32px;line-height:1;margin-bottom:8px}
+.leg-ev-name{font-size:12px;font-weight:600;color:#0F172A;margin-bottom:4px}
+.leg-ev-desc{font-size:11px;color:#4A6080;line-height:1.4}
+
+@media(max-width:700px){.legenda-section{padding:18px 20px}.leg-formula{flex-direction:column}.formula-op{transform:rotate(90deg)}}
+/* ─── YANFENG-STYLE RAG LEGEND ─────────────────────────────────────── */
+.rag-legend-panel{background:white;border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(31,56,100,.06);margin-bottom:18px}
+.rag-legend-header{background:linear-gradient(135deg,#1F3864 0%,#2E5090 100%);color:white;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.rag-legend-header h3{font-size:14px;font-weight:600;letter-spacing:.3px;margin:0;display:flex;align-items:center;gap:10px}
+.rag-legend-header .badge-info{font-size:11px;opacity:.85;font-weight:400}
+.rag-legend-body{padding:22px 28px}
+.rag-legend-intro{font-size:13px;color:#4A6080;margin-bottom:18px;line-height:1.6}
+.rag-scale{display:flex;height:56px;border-radius:10px;overflow:hidden;margin-bottom:8px;box-shadow:inset 0 2px 4px rgba(0,0,0,.08)}
+.rag-zone{display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;font-weight:600;position:relative}
+.rag-zone-label{font-size:13px;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.rag-zone-desc{font-size:10px;opacity:.92;margin-top:3px;font-weight:400;letter-spacing:.5px;text-transform:uppercase}
+.rag-axis{display:flex;justify-content:space-between;padding:0 4px;font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:24px}
+.rag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.rag-card{background:#F5F8FC;border-radius:10px;padding:14px 16px;border-left:4px solid #00875A;transition:transform .15s,box-shadow .2s}
+.rag-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(31,56,100,.1)}
+.rag-card.zone-green{border-left-color:#00875A;background:linear-gradient(135deg,#F0FAF4 0%,#E8F8F0 100%)}
+.rag-card.zone-amber{border-left-color:#FF8B00;background:linear-gradient(135deg,#FFF8EE 0%,#FEF3CD 100%)}
+.rag-card.zone-red{border-left-color:#DE350B;background:linear-gradient(135deg,#FFF3F0 0%,#FDEDEC 100%)}
+.rag-card-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rag-icon{font-size:18px}
+.rag-card-title{font-size:13px;font-weight:600;color:#0F172A;flex:1}
+.rag-card-value{font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,.7)}
+.rag-card-desc{font-size:11px;color:#4A6080;line-height:1.5}
+.rag-modifier-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.rag-mod-card{background:white;border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;border-left:4px solid var(--mid)}
+.rag-mod-icon{font-size:22px;line-height:1}
+.rag-mod-text{flex:1;font-size:12px;line-height:1.5;color:#4A6080}
+.rag-mod-text strong{color:#0F172A}
+@media(max-width:700px){.rag-modifier-row{grid-template-columns:1fr}}
+
+/* TASKS / ACTION PLAN */
+.tasks-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.tasks-filter{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:3px}
+.tasks-filter button{padding:6px 12px;font-size:11px;font-weight:600;border:none;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
+.tasks-filter button.active{background:var(--dark);color:white}
+.tasks-filter button:hover:not(.active){background:var(--light);color:var(--dark)}
+.add-task-btn{padding:7px 14px;font-size:12px;font-weight:600;border-radius:6px;border:none;background:var(--mid);color:white;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.add-task-btn:hover{background:var(--dark)}
+.tasks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.task-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative;border-left:3px solid var(--mid);transition:box-shadow .15s}
+.task-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.task-card.prio-high{border-left-color:#C0392B}
+.task-card.prio-medium{border-left-color:#F39C12}
+.task-card.prio-low{border-left-color:#27AE60}
+.task-card.status-done{opacity:.65;background:#F8FAFC}
+.task-card.status-blocked{background:#FDF6EC}
+.task-card.overdue{background:#FDEDEC;border-left-color:#C0392B}
+.task-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.task-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+.task-project-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--mid);background:#EBF5FB;padding:2px 8px;border-radius:10px;margin-bottom:4px;letter-spacing:.3px}
+.task-actions-icons{display:flex;gap:4px;flex-shrink:0}
+.task-icon-btn{background:transparent;border:none;cursor:pointer;font-size:13px;padding:2px 4px;color:var(--muted);border-radius:4px;line-height:1}
+.task-icon-btn:hover{background:var(--bg);color:var(--text)}
+.task-desc{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4}
+.task-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:10px;color:var(--muted)}
+.task-meta-item{display:inline-flex;align-items:center;gap:3px;background:var(--bg);padding:3px 7px;border-radius:10px}
+.status-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px}
+.st-todo{background:#EBF5FB;color:#1B4F72}
+.st-progress{background:#FEF3CD;color:#7D6608}
+.st-done{background:#EAFAF1;color:#1E8449}
+.st-blocked{background:#FDEDEC;color:#922B21}
+.prio-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;text-transform:uppercase}
+.pr-high{background:#FDEDEC;color:#C0392B}
+.pr-medium{background:#FEF3CD;color:#7D6608}
+.pr-low{background:#EAFAF1;color:#27AE60}
+.task-overdue-warn{font-size:9px;color:#C0392B;font-weight:700;margin-left:4px}
+.task-empty{text-align:center;padding:30px;color:var(--muted);font-style:italic;font-size:12px}
+
+/* TASK MODAL */
+.task-modal-form{display:flex;flex-direction:column;gap:12px}
+.task-modal-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.task-modal-form label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;display:block}
+.task-modal-form input,.task-modal-form select,.task-modal-form textarea{width:100%;font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text)}
+.task-modal-form textarea{resize:vertical;min-height:60px}
+.task-modal-form input:focus,.task-modal-form select:focus,.task-modal-form textarea:focus{outline:none;border-color:var(--mid);background:white}
+
+/* TRAFFIC LIGHT */
+/* FORM TRAFFIC LIGHT */
+.form-tl-wrap{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);margin-bottom:4px;transition:background .2s,border-color .2s}
+.form-tl-wrap.tl-excellent{background:#D5F5E3;border-color:#27AE60}
+.form-tl-wrap.tl-good{background:#EAFAF1;border-color:#82E0AA}
+.form-tl-wrap.tl-warning{background:#FEF9E7;border-color:#F39C12}
+.form-tl-wrap.tl-danger{background:#FDEDEC;border-color:#C0392B}
+.form-tl-lights{display:flex;flex-direction:column;gap:3px;background:#1a1a1a;padding:4px;border-radius:14px;border:1.5px solid #333}
+.form-tl-dot{width:14px;height:14px;border-radius:50%;opacity:.15;transition:opacity .2s,box-shadow .2s}
+.form-tl-dot.lit-g{opacity:1;background:#27AE60;box-shadow:0 0 6px #27AE60}
+.form-tl-dot.lit-lg{opacity:1;background:#82E0AA;box-shadow:0 0 6px #82E0AA}
+.form-tl-dot.lit-a{opacity:1;background:#F39C12;box-shadow:0 0 6px #F39C12}
+.form-tl-dot.lit-r{opacity:1;background:#C0392B;box-shadow:0 0 6px #C0392B}
+.tl-dot-g{background:#27AE60}.tl-dot-lg{background:#82E0AA}.tl-dot-a{background:#F39C12}.tl-dot-r{background:#C0392B}
+.form-tl-info{flex:1}
+.form-tl-val{font-size:22px;font-weight:800;color:var(--text)}
+.form-tl-band{font-size:12px;font-weight:700;margin-top:1px}
+.form-tl-band.excellent{color:#1a7a42}.form-tl-band.good{color:#1e8449}.form-tl-band.warning{color:#9A6000}.form-tl-band.danger{color:#7B241C}.form-tl-band.none{color:var(--muted)}
+.form-tl-target{font-size:11px;color:var(--muted);margin-top:2px}
+.optional-note{font-size:11px;color:#27AE60;font-weight:600;margin-top:4px}
+
+.tl-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;position:absolute;top:12px;right:12px}
+.tl-housing{background:#1a1a1a;border-radius:20px;padding:5px 5px;display:flex;flex-direction:column;gap:4px;border:2px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.tl-light{width:18px;height:18px;border-radius:50%;opacity:.18;transition:opacity .3s,box-shadow .3s}
+.tl-light.on-g{opacity:1;background:#27AE60;box-shadow:0 0 8px #27AE60}
+.tl-light.on-lg{opacity:1;background:#82E0AA;box-shadow:0 0 8px #82E0AA}
+.tl-light.on-a{opacity:1;background:#F39C12;box-shadow:0 0 8px #F39C12}
+.tl-light.on-r{opacity:1;background:#C0392B;box-shadow:0 0 8px #C0392B}
+.tl-g{background:#27AE60}
+.tl-lg{background:#82E0AA}
+.tl-a{background:#F39C12}
+.tl-r{background:#C0392B}
+.tl-label{font-size:9px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:.3px;max-width:52px;line-height:1.2}
+
+
+/* PANEL */
+.panel{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm)}
+.panel-header{background:linear-gradient(135deg,#1F3864 0%,#2E5090 100%);color:white;padding:12px 22px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;letter-spacing:.2px}
+.ph-right{display:flex;gap:8px;align-items:center}
+.panel-body{padding:16px 20px}
+.section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:0 0 5px;border-bottom:2px solid var(--accent);margin-bottom:10px;display:inline-block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:rgba(255,255,255,.8);align-items:center}
+.legend-item{display:flex;align-items:center;gap:4px}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.leg-dash{width:16px;height:2px;flex-shrink:0;border-radius:1px}
+
+/* ENTRY FORM */
+.entry-form{background:var(--card);border-radius:10px;border:2px solid var(--mid);overflow:hidden}
+.entry-header{background:linear-gradient(135deg,var(--dark),var(--mid));color:white;padding:10px 20px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.entry-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.entry-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+.month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.m-field{display:flex;flex-direction:column;gap:4px}
+.m-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.m-inp{font-size:14px;font-weight:600;padding:8px 10px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);width:100%;transition:border-color .15s}
+.m-inp:focus{outline:none;border-color:var(--mid);background:#fff}
+.m-unit{font-size:10px;color:var(--muted);text-align:right}
+textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
+.comment-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.evidence-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.full-width{grid-column:1/-1}
+.required-star{color:var(--red);margin-left:2px}
+.validation-msg{font-size:11px;color:var(--red);display:none;margin-top:2px}
+.entry-actions{display:flex;gap:8px;align-items:center;padding-top:4px;border-top:1px solid var(--border)}
+
+/* ACTION PLAN */
+.ap-panel{background:#FFFBF0;border:1px solid #F9CA74;border-radius:8px;padding:14px 16px}
+.ap-title{font-size:11px;font-weight:700;color:#8B5E00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.ap-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ap-inp{font-size:12px;padding:7px 10px;border-radius:6px;border:1px solid #F9CA74;background:#fff;width:100%;color:var(--text)}
+.ap-inp:focus{outline:none;border-color:var(--amber)}
+
+/* OVERVIEW TABLE */
+.ov-table{width:100%;border-collapse:collapse;font-size:13px}
+.ov-table th{background:var(--dark);color:white;padding:9px 14px;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;text-align:left}
+.ov-table th.c{text-align:center}
+.ov-table td{padding:10px 14px;border-bottom:1px solid var(--border)}
+.ov-table tr:last-child td{border-bottom:none}
+.ov-table tr:hover td{background:#F8FAFC}
+.ov-table td.c{text-align:center}
+.ov-num{font-size:11px;color:var(--muted)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--bg);color:var(--muted);margin-left:4px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.dg{background:var(--green)}.da{background:var(--amber)}.dr{background:var(--red)}.dgr{background:#bbb}
+.ev-icon{font-size:13px;cursor:pointer}
+
+/* BONUS PANEL */
+.bonus-panel{background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.bonus-header{background:linear-gradient(135deg,#1B3A5C,#2E6DA4);color:white;padding:10px 20px;font-size:13px;font-weight:700}
+.bonus-body{padding:16px 20px}
+.bonus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.bonus-card{background:var(--bg);border-radius:8px;padding:12px 14px;text-align:center}
+.bonus-kpi{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.bonus-pct{font-size:24px;font-weight:800;color:var(--dark)}
+.bonus-band{font-size:10px;color:var(--muted);margin-top:2px}
+.bonus-total{background:var(--dark);color:white;border-radius:8px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.bonus-total-label{font-size:12px;opacity:.8}
+.bonus-total-val{font-size:28px;font-weight:800}
+.bonus-formula{font-size:11px;color:var(--muted);margin-top:8px}
+
+/* HISTORY */
+.hist-table{width:100%;border-collapse:collapse;font-size:12px}
+.hist-table th{background:var(--dark);color:white;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:left}
+.hist-table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.hist-table tr:last-child td{border-bottom:none}
+.hist-table tr:hover td{background:#F8FAFC}
+.ev-badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:8px}
+.ev-verified{background:#EAFAF1;color:var(--green)}
+.ev-pending{background:#FFF3E0;color:#E65100}
+.ev-none{background:#FDEDEC;color:var(--red)}
+.hist-comment{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px}
+.ap-badge{display:inline-block;font-size:10px;padding:1px 7px;border-radius:8px;background:#FEF9E7;color:#8B5E00;margin-left:4px}
+
+/* MODAL */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--card);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:12px}
+.modal p{font-size:13px;color:var(--text);margin-bottom:8px;line-height:1.6}
+.modal .ev-img{width:100%;border-radius:8px;margin-top:8px;border:1px solid var(--border)}
+.modal-close{float:right;background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)}
+
+/* HINT BAR */
+.hint-bar{background:#EBF5FB;border:1px solid #AED6F1;border-radius:8px;padding:9px 16px;font-size:12px;color:var(--mid);font-weight:600;display:flex;align-items:center;gap:8px}
+.update-bar{background:#E8F8F0;border:1px solid #A9DFBF;border-radius:8px;padding:9px 16px;font-size:12px;color:#1E8449;font-weight:600;display:flex;align-items:center;gap:8px}
+.update-bar.update-bar-empty{background:#FDF6EC;border-color:#F5CBA7;color:#A04000}
+.changelog-table{width:100%;border-collapse:collapse;font-size:12px}
+.changelog-table th{background:var(--dark);color:white;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:left}
+.changelog-table th.c{text-align:center}
+.changelog-table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.changelog-table tr:last-child td{border-bottom:none}
+.changelog-table tr:hover td{background:#F8FAFC}
+.changelog-table td.c{text-align:center}
+.cl-user{font-weight:700;color:var(--dark)}
+.cl-kpi{font-weight:600}
+.cl-val{font-weight:700;font-size:13px}
+.cl-comment{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px;line-height:1.4}
+.cl-time{font-size:11px;color:var(--muted);white-space:nowrap}
+.cl-empty{padding:24px;text-align:center;color:var(--muted);font-style:italic;font-size:12px}
+.update-icon{font-size:14px}
+.update-time{font-weight:400;color:var(--muted);margin-left:6px}
+#user-select option{background:white;color:var(--text)}
+.user-required-msg{background:#FDEDEC;border:1px solid #F1948A;border-radius:8px;padding:12px 16px;font-size:13px;color:#922B21;font-weight:600;text-align:center}
+
+/* CHARTS */
+.chart-wrap{position:relative;width:100%}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* AP OPEN */
+.ap-open{background:#FFFBF0;border-left:3px solid var(--amber);padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;margin-top:4px}
+.ap-open strong{color:#8B5E00}
+
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.month-grid{grid-template-columns:repeat(3,1fr)}.chart-grid{grid-template-columns:1fr}.bonus-grid{grid-template-columns:repeat(2,1fr)}.main{padding:14px 16px}.header,.tab-bar{padding:10px 16px}}
+</style>
+</head>
+<body>
+
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>🔐 KPI Dashboard</h1>
+      <p>Manufacturing Engineering · Logistics · Production</p>
+    </div>
+    <div class="login-error" id="login-error">Nesprávné heslo nebo uživatel</div>
+    <div class="login-field">
+      <label class="login-label">Uživatel</label>
+      <select class="login-input" id="login-user">
+        <option value="">— vyberte uživatele —</option>
+        <option value="David Varhan">David Varhan (ME Manager)</option>
+        <option value="Milan Lízala">Milan Lízala (Logistics Manager)</option>
+        <option value="Production Manager">Production Manager</option>
+        <option value="Milan Hanus">Milan Hanus (Operation Manager)</option>
+      </select>
+    </div>
+    <div class="login-field">
+      <label class="login-label">Heslo</label>
+      <input class="login-input" type="password" id="login-password" placeholder="Heslo">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Přihlásit se</button>
+    <div style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center">
+      Pro získání hesla kontaktujte administrátora dashboardu.
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <h1>KPI Dashboard — Manufacturing Engineering &amp; Logistics</h1>
+    <div class="sub">Váha KPI: 25 % každé · Sledování celý kalendářní rok</div>
+  </div>
+  <div class="header-right">
+    <span class="badge" id="hdr-month" title="Poslední uzavřený měsíc"></span>
+    <span class="badge" id="hdr-now" style="background:rgba(255,255,255,.18)" title="Aktuální datum a čas"></span>
+    <span class="badge" id="hdr-sync" style="background:rgba(127,140,141,.6)">⏳ Připojuji...</span>
+    <span class="badge accent" id="hdr-pending">⚠ 0 čeká na verifikaci</span>
+    <span class="current-user-badge" id="current-user-badge">Nepřihlášen</span>
+    <button class="logout-btn" id="admin-reset-btn" onclick="adminResetPassword()" title="Reset hesla uživatele (admin)" style="display:none">🔑 Reset hesla</button>
+    <button class="logout-btn" onclick="doLogout()" title="Odhlásit">Odhlásit</button>
+    <input type="hidden" id="user-select" value="">
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab-group">
+    <button class="tab active" onclick="go(0,this)">Manufacturing Engineering</button>
+    <button class="tab" onclick="go(1,this)">Logistics Manager</button>
+    <button class="tab" onclick="go(2,this)">Production Manager</button>
+    <button class="tab" onclick="go(3,this)" style="background:linear-gradient(135deg,#5D3FD3,#7A5CE0);color:white">📖 Legenda</button>
+  </div>
+  <div class="tab-actions">
+    <button class="btn" onclick="showHistory()">📋 Historie zadání</button>
+    <button class="btn danger" onclick="clearData()">🗑 Reset dat</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sl on" id="s0"></div>
+  <div class="sl" id="s1"></div>
+  <div class="sl" id="s2"></div>
+  <div class="sl" id="s3"></div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div id="hist-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeHistory()">
+  <div class="modal" style="max-width:800px">
+    <button class="modal-close" onclick="closeHistory()">✕</button>
+    <h3>📋 Historie všech zadání</h3>
+    <div id="hist-content"></div>
+  </div>
+</div>
+
+<!-- EVIDENCE MODAL -->
+<div id="ev-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeEvModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEvModal()">✕</button>
+    <div id="ev-modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA DEFINITIONS ────────────────────────────────────────────────────────
+// Full calendar year (Jan-Dec). Default = current year.
+const MONTH_NAMES = ['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+function computeMonths() {
+  const year = new Date().getFullYear();
+  const labels = [];
+  const keys = [];
+  for (let i = 0; i < 12; i++) {
+    labels.push(MONTH_NAMES[i]);
+    keys.push(year + '-' + String(i+1).padStart(2,'0'));
+  }
+  return { labels, keys, year };
+}
+let _MONTHS_INFO = computeMonths();
+const MONTHS = _MONTHS_INFO.labels;
+const MONTH_KEYS = _MONTHS_INFO.keys;
+const CURRENT_YEAR = _MONTHS_INFO.year;
+// Helper: index of last closed month for "current value" display
+function lastClosedMonthIdx() {
+  // Always show all 12 months (Jan-Dec)
+  return MONTHS.length - 1;
+}
+
+// Get the "current" value: last non-null value up to and including last closed month
+function getCurrentValue(kpi) {
+  const lastIdx = lastClosedMonthIdx();
+  for (let i = lastIdx; i >= 0; i--) {
+    const v = kpi.data[i];
+    if (v !== null && v !== undefined && !isNaN(v)) return v;
+  }
+  return null;
+}
+
+
+
+const DEPTS = {
+  me: {
+    label: 'Manufacturing Engineering',
+    varPct: 0.163,
+    kpis: [
+      { id:'me1', name:'OEE', sub:'Celková efektivita zařízení', color:'blue',
+        target:85, min:70, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=85},{label:'Splněno',pct:100,cond:v=>v>=80},{label:'Částečně',pct:50,cond:v=>v>=70},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'SCADA / Shopfloor monitoring', systemSource:'Symestic / SCADA',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'me2', name:'Plnění termínů projektů / úloh ME', sub:'On-Time Delivery of ME Projects', color:'green',
+        target:90, min:70, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Splněno',pct:100,cond:v=>v>=80},{label:'Částečně',pct:50,cond:v=>v>=70},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'MS Project / Jira / interní tracker', systemSource:'MS Project / Jira – export termínů',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'me3', name:'Internal Scrap Rate (incl. testing)', sub:'Interní Scrap Rate vč. testování', color:'red',
+        target:1.15, min:1.5, lb:true, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=1.15},{label:'Splněno',pct:100,cond:v=>v<=1.3},{label:'Částečně',pct:50,cond:v=>v<=1.5},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'MES systém – testovací stanice + výrobní zmetky', systemSource:'MES – Quality report (testovací stanice)',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'me4', name:'Actual vs. Standard Cycle Time', sub:'Skutečný vs. normovaný takt', color:'amber',
+        target:100, min:110, lb:true, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=100},{label:'Splněno',pct:100,cond:v=>v<=105},{label:'Částečně',pct:50,cond:v=>v<=110},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'MES systém / SCADA – automatické měření taktů', systemSource:'MES / SCADA – export cycle times',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+    ]
+  },
+  log: {
+    label: 'Logistics Manager',
+    varPct: 0.163,
+    kpis: [
+      { id:'log1', name:'OTIF — On-Time In-Full', sub:'Dodávky zákazníkům včas a v plném množství', color:'blue',
+        target:97, min:93, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=97},{label:'Splněno',pct:100,cond:v=>v>=95},{label:'Částečně',pct:50,cond:v=>v>=93},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'WMS / ERP – zákaznické objednávky vs. skutečná expedice', systemSource:'SAP / ERP – Controlling report',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'log2', name:'Inventory Accuracy', sub:'Přesnost skladové evidence (cycle count)', color:'amber',
+        target:97, min:92, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=97},{label:'Splněno',pct:100,cond:v=>v>=95},{label:'Částečně',pct:50,cond:v=>v>=92},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'WMS / ERP – výsledky cycle countů', systemSource:'WMS / ERP – výsledky cycle countů',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'log3', name:'5S Audit Score', sub:'Bodové hodnocení 5S auditu skladu a logistických ploch', color:'green',
+        target:90, min:70, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Splněno',pct:100,cond:v=>v>=80},{label:'Částečně',pct:50,cond:v=>v>=70},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'5S audit protokol – interní auditor', systemSource:'5S audit protokol (interní)',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'log4', name:'Logistics Cost - Special Deliveries', sub:'Náklady na speciální / expresní dodávky naším zaviněním (€/měsíc)', color:'red',
+        target:0, min:5000, lb:true, weight:25, unit:'€',
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=0},{label:'Částečně',pct:50,cond:v=>v<=5000},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Controlling – evidence speciálních dodávek (faktury, claim notes)', systemSource:'Controlling – přehled special deliveries',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+    ]
+  },
+  prod: {
+    label: 'Production Manager', varPct: 0.163,
+    kpis: [
+      { id:'prod1', name:'Schedule Adherence', sub:'Plnění výrobního plánu', color:'blue',
+        target:95, min:85, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=85},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'ERP (SAP) – výrobní příkazy vs. plán', systemSource:'ERP (SAP) – výrobní příkazy',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'prod2', name:'Recurring Complaints', sub:'Opakované reklamace (stejná root cause / 12 měsíců)', color:'red',
+        target:0, min:2, lb:true, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=0},{label:'Splněno',pct:100,cond:v=>v<=1},{label:'Částečně',pct:50,cond:v=>v<=2},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Quality systém – CAPA / 8D reporty', systemSource:'Quality / CAPA tracker',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'prod3', name:'Fluktuace operátorů', sub:'% odchodů z průměrného stavu týmu / měsíc', color:'amber',
+        target:1.5, min:4, lb:true, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=1.5},{label:'Splněno',pct:100,cond:v=>v<=2.5},{label:'Částečně',pct:50,cond:v=>v<=4},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'HR systém – odchody / průměrný stav', systemSource:'HR systém – fluktuace report',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'prod4', name:'5S Audit Score', sub:'Bodové hodnocení 5S auditu výrobních ploch', color:'green',
+        target:90, min:70, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Splněno',pct:100,cond:v=>v>=80},{label:'Částečně',pct:50,cond:v=>v>=70},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'5S audit protokol – interní auditor', systemSource:'5S audit protokol (interní)',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+    ]
+  }
+};
+
+const CCOL = { blue:'#2E6DA4', green:'#27AE60', red:'#C0392B', amber:'#F39C12', purple:'#8E44AD' };
+const charts = {};
+let activeEdit = null;
+
+
+// ─── MONTH KEY DATA HELPERS ──────────────────────────────────────────────────
+// Underlying data is stored as a dict { 'YYYY-MM': value }, kpi.data is the
+// visible 6-element array mapped from that dict for the current window.
+function syncKpiDataFromDict(kpi) {
+  const dict = kpi.dataDict || {};
+  kpi.data = MONTH_KEYS.map(k => dict[k] !== undefined ? dict[k] : null);
+}
+function syncDictFromArray(kpi) {
+  kpi.dataDict = kpi.dataDict || {};
+  MONTH_KEYS.forEach((k, i) => {
+    kpi.dataDict[k] = (kpi.data[i] === null || kpi.data[i] === undefined) ? null : kpi.data[i];
+  });
+}
+
+// ─── FIREBASE SETUP ──────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAmc0MVQNNdXtPHyjJRWfChgWTuxUgS650",
+  authDomain: "kpi-me-log.firebaseapp.com",
+  databaseURL: "https://kpi-me-log-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "kpi-me-log",
+  storageBucket: "kpi-me-log.firebasestorage.app",
+  messagingSenderId: "662402432346",
+  appId: "1:662402432346:web:f7e992109b52890651c763"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// In-memory cache of the store, synced from Firebase
+let _storeCache = { entries: [] };
+let _firebaseReady = false;
+
+function loadStore() { return _storeCache; }
+
+function cleanForFirebase(obj) {
+  if (obj === undefined) return null;
+  if (obj === null) return null;
+  if (Array.isArray(obj)) return obj.map(cleanForFirebase);
+  if (typeof obj === 'object') {
+    const result = {};
+    for (const k in obj) {
+      const v = cleanForFirebase(obj[k]);
+      if (v !== undefined) result[k] = v;
+    }
+    return result;
+  }
+  if (typeof obj === 'number' && isNaN(obj)) return null;
+  return obj;
+}
+
+function saveStore(s) {
+  _storeCache = s;
+  const cleaned = cleanForFirebase(s);
+  db.ref('store').set(cleaned).catch(e => {
+    console.error('Firebase save error:', e);
+    alert('Chyba při ukládání do Firebase: ' + (e.message || e));
+  });
+}
+
+function loadPersistedData() {
+  Object.keys(DEPTS).forEach(deptId => {
+    DEPTS[deptId].kpis.forEach(kpi => {
+      const savedDict = _storeCache['datadict_' + kpi.id];
+      if (savedDict) {
+        kpi.dataDict = savedDict;
+        syncKpiDataFromDict(kpi);
+      } else {
+        const savedArr = _storeCache['data_' + kpi.id];
+        if (savedArr && Array.isArray(savedArr)) {
+          // Legacy: assume the saved array corresponds to current MONTH_KEYS
+          kpi.dataDict = {};
+          MONTH_KEYS.forEach((k, i) => { kpi.dataDict[k] = savedArr[i]; });
+          syncKpiDataFromDict(kpi);
+        }
+      }
+    });
+  });
+}
+
+function persistKpiData(kpiId, data) {
+  // Find kpi to get dict
+  let kpi = null;
+  Object.keys(DEPTS).forEach(d => { const k = DEPTS[d].kpis.find(x=>x.id===kpiId); if (k) kpi = k; });
+  if (kpi) {
+    syncDictFromArray(kpi);
+    _storeCache['datadict_' + kpiId] = kpi.dataDict;
+  }
+  saveStore(_storeCache);
+}
+
+function saveEntry(entry) {
+  _storeCache.entries = _storeCache.entries || [];
+  _storeCache.entries.unshift(entry);
+  if (_storeCache.entries.length > 200) _storeCache.entries = _storeCache.entries.slice(0, 200);
+  saveStore(_storeCache);
+}
+
+// Live sync: re-render dashboard when remote data changes
+function setupFirebaseSync() {
+  db.ref('store').on('value', snap => {
+    const val = snap.val();
+    if (val) {
+      _storeCache = val;
+      if (!_storeCache.entries) _storeCache.entries = [];
+    } else {
+      _storeCache = { entries: [] };
+    }
+    // Apply data into DEPTS (prefer dict, fallback to legacy array)
+    Object.keys(DEPTS).forEach(deptId => {
+      DEPTS[deptId].kpis.forEach(kpi => {
+        const savedDict = _storeCache['datadict_' + kpi.id];
+        if (savedDict) {
+          kpi.dataDict = savedDict;
+          syncKpiDataFromDict(kpi);
+        } else {
+          const savedArr = _storeCache['data_' + kpi.id];
+          if (savedArr && Array.isArray(savedArr)) {
+            kpi.dataDict = {};
+            MONTH_KEYS.forEach((k, i) => { kpi.dataDict[k] = savedArr[i]; });
+            syncKpiDataFromDict(kpi);
+          }
+        }
+      });
+    });
+    // Re-render all depts
+    renderDept('me','s0');
+    renderDept('log','s1');
+    renderDept('prod','s2');
+    // Rebuild charts only for active tab
+    const activeTab = document.querySelector('.tab.active');
+    const idx = activeTab ? Array.from(document.querySelectorAll('.tab')).indexOf(activeTab) : 0;
+    const deptId = idx === 0 ? 'me' : idx === 1 ? 'log' : 'prod';
+    setTimeout(() => buildCharts(deptId), 60);
+    updatePendingBadge();
+    updateSyncStatus(true);
+  }, err => {
+    console.error('Firebase sync error:', err);
+    updateSyncStatus(false);
+  });
+}
+
+function updateSyncStatus(connected) {
+  const el = document.getElementById('hdr-sync');
+  if (!el) return;
+  el.textContent = connected ? '🟢 Online · sync aktivní' : '🔴 Offline';
+  el.style.background = connected ? 'rgba(39,174,96,.7)' : 'rgba(192,57,43,.7)';
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function getStatus(val, kpi) {
+  if (val === null || val === undefined || isNaN(val)) return 'gray';
+  return kpi.lb ? (val <= kpi.target ? 'green' : val <= kpi.min ? 'amber' : 'red')
+                : (val >= kpi.target ? 'green' : val >= kpi.min ? 'amber' : 'red');
+}
+function getBand(val, kpi) {
+  if (val === null || isNaN(val)) return { label:'Bez dat', pct:0, attainment: null };
+  // Absolute thresholds from kpi.bands array
+  let band = kpi.bands.find(b => b.cond(val)) || kpi.bands[kpi.bands.length-1];
+  band = { label: band.label, pct: band.pct };
+  // Calculate attainment for display only
+  let attainment;
+  if (kpi.lb) {
+    if (val <= 0) attainment = 0;
+    else attainment = (kpi.target / val) * 100;
+  } else {
+    if (kpi.target === 0) attainment = 0;
+    else attainment = (val / kpi.target) * 100;
+  }
+  band.attainment = attainment;
+  return band;
+}
+const SL = { green:'Splněno', amber:'Na hraně', red:'Nesplněno', gray:'Bez dat' };
+const MB = { green:'mb-g', amber:'mb-a', red:'mb-r', gray:'mb-n' };
+const DC = { green:'dg', amber:'da', red:'dr', gray:'dgr' };
+const VC = { green:'cv-green', amber:'cv-amber', red:'cv-red', gray:'' };
+function fmtVal(v, kpi) {
+  if (v===null||v===undefined||isNaN(v)) return '—';
+  // Custom unit per KPI
+  if (kpi && kpi.unit === '€') {
+    return Math.round(v).toLocaleString('cs-CZ') + ' €';
+  }
+  if (kpi && kpi.id === 'prod2') {
+    return Math.round(v) + ' ks';
+  }
+  return (v<10?v.toFixed(2):v.toFixed(1)) + ' %';
+}
+function ytd(data, kpi) {
+  const lastIdx = lastClosedMonthIdx();
+  const v = data.slice(0, lastIdx + 1).filter(x => x !== null && !isNaN(x));
+  if (!v.length) return '—';
+  const avg = v.reduce((a,b) => a+b, 0)/v.length;
+  if (kpi && kpi.unit === '€') return Math.round(avg).toLocaleString('cs-CZ') + ' €';
+  if (kpi && kpi.id === 'prod2') return avg.toFixed(1) + ' ks';
+  return avg.toFixed(1) + ' %';
+}
+function trendTxt(data, lb) {
+  const v=data.filter(x=>x!==null&&!isNaN(x));
+  if (v.length<2) return '— žádná data';
+  const diff=v[v.length-1]-v[v.length-2];
+  if (Math.abs(diff)<0.05) return '→ stabilní';
+  const up=diff>0, good=lb?!up:up;
+  return (up?'▲':'▼')+' '+Math.abs(diff).toFixed(2)+' p.b. '+(good?'✓':'✗');
+}
+function pendingCount() {
+  const store = loadStore();
+  const entries = store.entries || [];
+  const recent = entries.filter(e => {
+    const d = new Date(e.ts);
+    const now = new Date();
+    return (now - d) < 35*24*3600*1000;
+  });
+  return recent.filter(e => e.evidenceType === 'none' || !e.evidenceType).length;
+}
+function updatePendingBadge() {
+  const n = pendingCount();
+  const el = document.getElementById('hdr-pending');
+  if (el) { el.textContent = n > 0 ? `⚠ ${n} čeká na verifikaci` : '✓ Vše verifikováno'; el.style.background = n > 0 ? 'rgba(192,57,43,.7)' : 'rgba(39,174,96,.6)'; }
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function getBandClass(band) {
+  const map = {'Výborný':'sl-excellent','Splněno':'sl-good','Částečně':'sl-warning','Nesplněno':'sl-danger'};
+  return map[band.label] || '';
+}
+function getTLHtml(band) { return ''; }
+
+
+
+// ─── PROJECTS ────────────────────────────────────────────────────────────────
+const PROJECTS = [
+  '01 SK336','02 OV51','03 OV64','04 W177 IP','05 W247 IP','06 Slush 1','07 Slush 2',
+  '08 Kuka 1','09 Kuka 2','10 Foaming 1','11 Foaming 2','12 W177 GB','13 W247 GB','14 OV64 GB',
+  '15 IMM 001','16 IMM 002','17 IMM 003','18 IMM 005','19 IMM 006','20 IMM 007','21 IMM 008',
+  '22 IMM 009','23 IMM 010','24 IMM 011','25 IMM 012','26 G463','27 Prefix','28 W206 IP','29 X540 IP'
+];
+
+
+// ─── PEOPLE DEVELOPMENT (informativní, bez bonusu) ────────────────────────────
+const PEOPLE_DEV_METRICS = [
+  {
+    id: 'pd_oneone',
+    name: 'Manager 1:1 frequency',
+    sub: 'Vážený poměr 1:1 schůzek (70 % direct + 30 % skip-level)',
+    target: 75, lb: false,
+    source: '1:1 tracker (Excel / OneNote / Teams)',
+    verifyNote: 'Ověření: screenshot trackeru + skip-level pohovor 2× ročně (OM/HR)',
+    type: 'computed_oneone', // special calculation
+    inputs: [
+      { id: 'direct_total', label: 'Počet direct reportů', placeholder: 'např. 5' },
+      { id: 'direct_done',  label: '1:1 provedené (direct)', placeholder: 'např. 5' },
+      { id: 'skip_total',   label: 'Počet skip-level lidí (level 2)', placeholder: 'např. 15' },
+      { id: 'skip_done',    label: '1:1 provedené (skip-level)', placeholder: 'např. 4' },
+    ],
+  },
+  {
+    id: 'pd_idp',
+    name: 'IDP Coverage',
+    sub: '% týmu (direct + skip-level) s aktivním IDP',
+    target: 80, lb: false,
+    source: 'HR systém / sdílený IDP tracker',
+    verifyNote: 'Ověření: potvrzení HR Business Partnerem',
+    type: 'computed_ratio',
+    inputs: [
+      { id: 'team_total', label: 'Celkový počet lidí v týmu (direct + skip-level)', placeholder: 'např. 20' },
+      { id: 'idp_active', label: 'Z toho s aktivním IDP', placeholder: 'např. 16' },
+    ],
+  },
+  {
+    id: 'pd_crosstraining',
+    name: 'Cross-training Matrix Coverage',
+    sub: '% klíčových pozic s min. 2 zastoupením',
+    target: 70, lb: false,
+    source: 'Cross-training matrix (Excel / dílenská tabule)',
+    verifyNote: 'Ověření: screenshot aktuální matice se zastupiteli',
+    type: 'computed_ratio',
+    inputs: [
+      { id: 'positions_total', label: 'Počet klíčových pozic', placeholder: 'např. 8' },
+      { id: 'positions_covered', label: 'Z toho s min. 2 zastupiteli', placeholder: 'např. 5' },
+    ],
+  },
+];
+
+// Compute final value from input fields
+function computePDValue(metric, inputs) {
+  if (metric.type === 'computed_oneone') {
+    const dt = parseFloat(inputs.direct_total);
+    const dd = parseFloat(inputs.direct_done);
+    const st = parseFloat(inputs.skip_total);
+    const sd = parseFloat(inputs.skip_done);
+    const directPct = (isNaN(dt) || dt === 0) ? null : (dd / dt) * 100;
+    const skipPct = (isNaN(st) || st === 0) ? null : (sd / st) * 100;
+    if (directPct === null && skipPct === null) return { value: null };
+    let weighted;
+    if (skipPct === null) weighted = directPct;
+    else if (directPct === null) weighted = skipPct;
+    else weighted = directPct * 0.7 + skipPct * 0.3;
+    return { value: weighted, directPct, skipPct };
+  }
+  if (metric.type === 'computed_ratio') {
+    const ids = metric.inputs.map(i => i.id);
+    const total = parseFloat(inputs[ids[0]]);
+    const part = parseFloat(inputs[ids[1]]);
+    if (isNaN(total) || total === 0) return { value: null };
+    return { value: (part / total) * 100 };
+  }
+  return { value: null };
+}
+
+function pdBand(val, m) {
+  if (val === null || val === undefined || isNaN(val)) return { label: 'Bez dat', cls: 'pd-gray' };
+  if (m.lb) {
+    if (val <= m.target) return { label: 'Cíl splněn', cls: 'pd-green' };
+    return { label: 'Pod cílem', cls: 'pd-red' };
+  } else {
+    if (val >= m.target) return { label: 'Cíl splněn', cls: 'pd-green' };
+    if (val >= m.target * 0.85) return { label: 'Téměř splněn', cls: 'pd-amber' };
+    return { label: 'Pod cílem', cls: 'pd-red' };
+  }
+}
+
+function getDeptPDValues(deptId) {
+  const s = loadStore();
+  const obj = (s.pd && s.pd[deptId]) || {};
+  return obj;
+}
+
+function getDeptPDHistory(deptId) {
+  const s = loadStore();
+  const allEntries = (s.entries || []).filter(e => e.deptId === deptId && e.isPD);
+  return allEntries;
+}
+
+function savePDValue(deptId, metricId, payload) {
+  const s = loadStore();
+  if (!s.pd) s.pd = {};
+  if (!s.pd[deptId]) s.pd[deptId] = {};
+  if (!s.pd[deptId][metricId]) s.pd[deptId][metricId] = {};
+  // payload: { value, comment, evidenceType, evidenceUrl, evidenceImg, monthKey, ts, editedBy }
+  s.pd[deptId][metricId][payload.monthKey] = payload;
+  // Add to entries for history
+  if (!s.entries) s.entries = [];
+  s.entries.unshift({
+    id: 'pd_' + Date.now().toString(),
+    kpiId: metricId,
+    deptId,
+    isPD: true,
+    editedBy: payload.editedBy,
+    month: payload.monthKey,
+    value: payload.value,
+    comment: payload.comment || '',
+    validator: payload.validator || '',
+    evidenceType: payload.evidenceType || 'none',
+    evidenceUrl: payload.evidenceUrl || '',
+    evidenceImg: payload.evidenceImg || '',
+    inputs: payload.inputs || {},
+    ts: payload.ts,
+  });
+  if (s.entries.length > 200) s.entries = s.entries.slice(0, 200);
+  saveStore(s);
+}
+
+function renderPeopleDevPanel(deptId) {
+  const lastKey = MONTH_KEYS[MONTH_KEYS.length - 1];
+  const pdValues = getDeptPDValues(deptId);
+
+  let cardsHtml = '';
+  PEOPLE_DEV_METRICS.forEach(m => {
+    const data = (pdValues[m.id] && pdValues[m.id][lastKey]) || null;
+    const val = data ? data.value : null;
+    const band = pdBand(val, m);
+    const display = (val === null || val === undefined || isNaN(val)) ? '—' : (val.toFixed(1) + ' %');
+    const hasEv = data && data.evidenceType && data.evidenceType !== 'none';
+    const evBadge = data
+      ? (hasEv ? '<span class="ev-badge ev-verified">✓ Ověřeno</span>' : '<span class="ev-badge ev-pending">⚠ Bez evidence</span>')
+      : '<span class="ev-badge ev-none">Bez záznamu</span>';
+
+    let breakdownHtml = '';
+    if (data && data.inputs) {
+      if (m.type === 'computed_oneone') {
+        const dt = parseFloat(data.inputs.direct_total);
+        const dd = parseFloat(data.inputs.direct_done);
+        const st = parseFloat(data.inputs.skip_total);
+        const sd = parseFloat(data.inputs.skip_done);
+        const dp = (isNaN(dt) || dt === 0) ? null : (dd/dt*100).toFixed(0);
+        const sp = (isNaN(st) || st === 0) ? null : (sd/st*100).toFixed(0);
+        breakdownHtml = `<div class="pd-breakdown">
+          Direct: <strong>${isNaN(dd)?'—':dd}/${isNaN(dt)?'—':dt}</strong> (${dp===null?'—':dp+' %'})
+          · Skip-level: <strong>${isNaN(sd)?'—':sd}/${isNaN(st)?'—':st}</strong> (${sp===null?'—':sp+' %'})
+        </div>`;
+      } else if (m.type === 'computed_ratio') {
+        const total = parseFloat(data.inputs[m.inputs[0].id]);
+        const part = parseFloat(data.inputs[m.inputs[1].id]);
+        breakdownHtml = `<div class="pd-breakdown"><strong>${isNaN(part)?'—':part}/${isNaN(total)?'—':total}</strong> ${m.inputs[1].label.toLowerCase()}</div>`;
+      }
+    }
+    cardsHtml += `<div class="pd-card ${band.cls}" onclick="openPDForm('${deptId}','${m.id}')">
+      <div class="pd-name">${m.name}</div>
+      <div class="pd-sub">${m.sub}</div>
+      <div class="pd-value">${display}</div>
+      ${breakdownHtml}
+      <div class="pd-meta">
+        <span class="pd-band-badge ${band.cls}">${band.label}</span>
+        <span class="pd-target">Cíl ${m.lb?'≤':'≥'} ${m.target} %</span>
+      </div>
+      <div class="pd-ev">${evBadge}</div>
+    </div>`;
+  });
+
+  return `<div class="panel pd-panel">
+    <div class="panel-header" style="background:linear-gradient(135deg,#5D3FD3,#7A5CE0)">
+      <span>👥 People Development — Lidé & Tým</span>
+      <div class="ph-right" style="font-size:11px;opacity:.9">Informativní · Bez vlivu na bonus · ${MONTHS[5]} ${new Date().getFullYear()}</div>
+    </div>
+    <div class="panel-body">
+      <div class="pd-grid">${cardsHtml}</div>
+      <div class="pd-note">
+        Klikni na kartu pro zadání hodnoty s evidence. Hodnoty jsou pouze informativní a neovlivňují variabilní složku.
+        Slouží OM, HR a managerovi pro sledování rozvoje týmu.
+      </div>
+    </div>
+  </div>`;
+}
+
+function openPDForm(deptId, metricId) {
+  const userSelect = document.getElementById('user-select');
+  const currentUser = userSelect ? userSelect.value : '';
+  if (!currentUser) { alert('Musíte se nejdřív přihlásit.'); return; }
+  const u = USERS[currentUser];
+  if (u && !ROLE_ACCESS[u.role].includes(deptId)) {
+    alert('Nemáte oprávnění upravovat hodnoty tohoto oddělení.');
+    return;
+  }
+
+  const m = PEOPLE_DEV_METRICS.find(x => x.id === metricId);
+  if (!m) return;
+  const lastKey = MONTH_KEYS[MONTH_KEYS.length - 1];
+  const pdValues = getDeptPDValues(deptId);
+  const existing = (pdValues[metricId] && pdValues[metricId][lastKey]) || null;
+  const existingInputs = (existing && existing.inputs) || {};
+
+  // Build input fields HTML based on metric type
+  let inputsHtml = '';
+  if (m.type === 'computed_oneone') {
+    inputsHtml = `
+      <div style="background:#EBF5FB;border:1px solid #AED6F1;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#1B4F72">
+        <strong>Výpočet:</strong> Vážený průměr = (direct % × 0.7) + (skip-level % × 0.3)
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="color:#1B4F72;font-weight:700">Direct reports</label>
+        </div>
+        <div>
+          <label style="color:#5D3FD3;font-weight:700">Skip-level (level 2)</label>
+        </div>
+        ${m.inputs.map(inp => `
+          <div>
+            <label>${inp.label}</label>
+            <input class="pd-input" type="number" min="0" step="1" id="pd-inp-${inp.id}" placeholder="${inp.placeholder}" value="${existingInputs[inp.id] !== undefined ? existingInputs[inp.id] : ''}" oninput="updatePDPreview('${metricId}')">
+          </div>
+        `).join('')}
+      </div>
+      <div id="pd-preview-${metricId}" style="background:#F3EAFF;border:1px solid #C9B6F0;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#5D3FD3">
+        <strong>Náhled:</strong> <span id="pd-preview-text-${metricId}">— zadej hodnoty pro výpočet —</span>
+      </div>
+    `;
+  } else if (m.type === 'computed_ratio') {
+    inputsHtml = `
+      <div style="background:#EBF5FB;border:1px solid #AED6F1;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#1B4F72">
+        <strong>Výpočet:</strong> % = (${m.inputs[1].label.toLowerCase()}) / (${m.inputs[0].label.toLowerCase()}) × 100
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${m.inputs.map(inp => `
+          <div>
+            <label>${inp.label}</label>
+            <input class="pd-input" type="number" min="0" step="1" id="pd-inp-${inp.id}" placeholder="${inp.placeholder}" value="${existingInputs[inp.id] !== undefined ? existingInputs[inp.id] : ''}" oninput="updatePDPreview('${metricId}')">
+          </div>
+        `).join('')}
+      </div>
+      <div id="pd-preview-${metricId}" style="background:#F3EAFF;border:1px solid #C9B6F0;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:#5D3FD3">
+        <strong>Náhled:</strong> <span id="pd-preview-text-${metricId}">— zadej hodnoty pro výpočet —</span>
+      </div>
+    `;
+  }
+
+  const modal = document.getElementById('ev-modal');
+  const contentEl = document.getElementById('ev-modal-content');
+  if (!modal || !contentEl) return;
+
+  contentEl.innerHTML = `
+    <h3>👥 ${m.name}</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${m.sub} &nbsp;·&nbsp; <strong>Cíl ${m.lb?'≤':'≥'} ${m.target} %</strong></p>
+    <div style="background:#F3EAFF;border:1px solid #C9B6F0;border-radius:8px;padding:10px 14px;font-size:11px;color:#5D3FD3;margin-bottom:14px">
+      ℹ <strong>Ověření:</strong> ${m.verifyNote}
+    </div>
+    <div class="task-modal-form">
+      <div>
+        ${inputsHtml}
+      </div>
+      <div>
+        <label>Komentář</label>
+        <textarea id="pd-comment" placeholder="Kontext, milníky, plánované akce...">${existing ? escapeHtml(existing.comment || '') : ''}</textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Typ evidence *</label>
+          <select id="pd-ev-type" onchange="togglePDEvFields()">
+            <option value="none">— vyberte typ —</option>
+            <option value="screenshot" ${existing && existing.evidenceType==='screenshot'?'selected':''}>Screenshot</option>
+            <option value="url" ${existing && existing.evidenceType==='url'?'selected':''}>URL / odkaz</option>
+            <option value="report" ${existing && existing.evidenceType==='report'?'selected':''}>Číslo reportu / reference</option>
+          </select>
+          <span style="font-size:10px;color:var(--muted)">Zdroj: ${m.source}</span>
+        </div>
+        <div id="pd-ev-url-field" style="display:${existing && (existing.evidenceType==='url'||existing.evidenceType==='report')?'block':'none'}">
+          <label>URL nebo reference</label>
+          <input id="pd-ev-url" type="text" placeholder="https:// nebo ID" value="${existing ? escapeAttr(existing.evidenceUrl || '') : ''}">
+        </div>
+        <div id="pd-ev-img-field" style="display:${existing && existing.evidenceType==='screenshot'?'block':'none'}">
+          <label>Screenshot</label>
+          <input id="pd-ev-img" type="file" accept="image/*">
+          ${existing && existing.evidenceImg ? '<span style="font-size:10px;color:var(--muted)">Předchozí screenshot uložen. Nahraj nový pro výměnu.</span>' : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn primary" onclick="savePDForm('${deptId}','${metricId}')">💾 Uložit</button>
+        <button class="btn" onclick="closeEvModal()">Zrušit</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+  // Trigger initial preview if data exists
+  setTimeout(() => updatePDPreview(metricId), 50);
+}
+
+function updatePDPreview(metricId) {
+  const m = PEOPLE_DEV_METRICS.find(x => x.id === metricId);
+  if (!m) return;
+  const inputs = {};
+  m.inputs.forEach(inp => {
+    const el = document.getElementById('pd-inp-' + inp.id);
+    inputs[inp.id] = el ? el.value : '';
+  });
+  const result = computePDValue(m, inputs);
+  const txt = document.getElementById('pd-preview-text-' + metricId);
+  const previewBox = document.getElementById('pd-preview-' + metricId);
+  const modalEl = document.querySelector('#ev-modal .modal');
+
+  // Reset modal state classes
+  if (modalEl) modalEl.classList.remove('pd-state-green', 'pd-state-red', 'pd-state-gray');
+
+  if (!txt) return;
+  if (result.value === null || isNaN(result.value)) {
+    txt.textContent = '— zadej hodnoty pro výpočet —';
+    if (modalEl) modalEl.classList.add('pd-state-gray');
+    if (previewBox) {
+      previewBox.style.background = '#F3EAFF';
+      previewBox.style.borderColor = '#C9B6F0';
+      previewBox.style.color = '#5D3FD3';
+    }
+    return;
+  }
+  const meetsTarget = m.lb ? (result.value <= m.target) : (result.value >= m.target);
+
+  // Apply colored state on the modal
+  if (modalEl) modalEl.classList.add(meetsTarget ? 'pd-state-green' : 'pd-state-red');
+
+  // Update the preview box colors
+  if (previewBox) {
+    if (meetsTarget) {
+      previewBox.style.background = '#D5F5E3';
+      previewBox.style.borderColor = '#27AE60';
+      previewBox.style.color = '#1E8449';
+    } else {
+      previewBox.style.background = '#FDEDEC';
+      previewBox.style.borderColor = '#C0392B';
+      previewBox.style.color = '#922B21';
+    }
+  }
+
+  const icon = meetsTarget ? '✓ Cíl splněn' : '⚠ Pod cílem';
+  if (m.type === 'computed_oneone') {
+    const d = result.directPct === null ? '—' : result.directPct.toFixed(1) + ' %';
+    const s = result.skipPct === null ? '—' : result.skipPct.toFixed(1) + ' %';
+    txt.innerHTML = `Direct: <strong>${d}</strong> · Skip-level: <strong>${s}</strong> → <strong style="font-size:14px">Celkem ${result.value.toFixed(1)} %</strong> ${icon}`;
+  } else {
+    txt.innerHTML = `<strong style="font-size:14px">${result.value.toFixed(1)} %</strong> ${icon}`;
+  }
+}
+
+function togglePDEvFields() {
+  const t = document.getElementById('pd-ev-type').value;
+  document.getElementById('pd-ev-url-field').style.display = (t==='url'||t==='report') ? 'block' : 'none';
+  document.getElementById('pd-ev-img-field').style.display = (t==='screenshot') ? 'block' : 'none';
+}
+
+async function savePDForm(deptId, metricId) {
+  const m = PEOPLE_DEV_METRICS.find(x => x.id === metricId);
+  if (!m) return;
+  // Read input field values
+  const inputs = {};
+  m.inputs.forEach(inp => {
+    const el = document.getElementById('pd-inp-' + inp.id);
+    inputs[inp.id] = el ? el.value : '';
+  });
+  // Validate at least main "total" field is filled
+  if (!inputs[m.inputs[0].id] || parseFloat(inputs[m.inputs[0].id]) === 0) {
+    alert('Vyplň alespoň hlavní číslo: ' + m.inputs[0].label);
+    return;
+  }
+  const result = computePDValue(m, inputs);
+  const val = result.value;
+  if (val === null || isNaN(val)) { alert('Nelze vypočítat — zkontroluj zadání.'); return; }
+  const comment = document.getElementById('pd-comment').value.trim();
+  const evType = document.getElementById('pd-ev-type').value;
+  if (!evType || evType === 'none') { alert('Vyber typ evidence — je povinný.'); return; }
+
+  let imgData = '';
+  if (evType === 'screenshot') {
+    const imgInp = document.getElementById('pd-ev-img');
+    if (imgInp && imgInp.files && imgInp.files[0]) {
+      imgData = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(imgInp.files[0]); });
+    } else {
+      // try to preserve existing screenshot from previous save
+      const s = loadStore();
+      const existing = s.pd && s.pd[deptId] && s.pd[deptId][metricId] && s.pd[deptId][metricId][MONTH_KEYS[MONTH_KEYS.length-1]];
+      if (existing && existing.evidenceImg) imgData = existing.evidenceImg;
+      else { alert('Nahraj screenshot.'); return; }
+    }
+  }
+  const evUrl = (evType === 'url' || evType === 'report') ? document.getElementById('pd-ev-url').value.trim() : '';
+  if ((evType === 'url' || evType === 'report') && !evUrl) { alert('Zadej URL nebo referenci.'); return; }
+
+  const userSelect = document.getElementById('user-select');
+  const currentUser = userSelect ? userSelect.value : 'Neznámý';
+
+  savePDValue(deptId, metricId, {
+    value: val,
+    inputs,
+    comment,
+    evidenceType: evType,
+    evidenceUrl: evUrl,
+    evidenceImg: imgData,
+    monthKey: MONTH_KEYS[MONTH_KEYS.length - 1],
+    ts: new Date().toISOString(),
+    editedBy: currentUser,
+  });
+  closeEvModal();
+}
+
+// ─── TASKS / ACTION PLAN ──────────────────────────────────────────────────────
+// Tasks are stored in Firebase under store.tasks (dict keyed by id)
+// Each task: { id, deptId, title, desc, owner, dueDate, priority, status, createdAt, createdBy, updatedAt, updatedBy }
+
+const TASK_FILTERS = { me: 'all', log: 'all', prod: 'all' };
+const TASK_PROJECT_FILTERS = { me: '', log: '', prod: '' };
+
+function getDeptTasks(deptId) {
+  const s = loadStore();
+  const allTasks = (s.tasks && typeof s.tasks === 'object') ? Object.values(s.tasks) : [];
+  return allTasks.filter(t => t.deptId === deptId);
+}
+
+function saveTask(task) {
+  const s = loadStore();
+  if (!s.tasks) s.tasks = {};
+  s.tasks[task.id] = task;
+  saveStore(s);
+}
+
+function deleteTask(taskId) {
+  const s = loadStore();
+  if (s.tasks && s.tasks[taskId]) {
+    delete s.tasks[taskId];
+    saveStore(s);
+  }
+}
+
+function isOverdue(task) {
+  if (!task.dueDate || task.status === 'done') return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(task.dueDate);
+  return due < today;
+}
+
+function renderTasksPanel(deptId) {
+  const tasks = getDeptTasks(deptId);
+  const filter = TASK_FILTERS[deptId] || 'all';
+  const projectFilter = TASK_PROJECT_FILTERS[deptId] || '';
+  let filtered = filter === 'all' ? tasks : tasks.filter(t => t.status === filter);
+  if (projectFilter) filtered = filtered.filter(t => t.project === projectFilter);
+
+  // Sort: priority (high>medium>low), then due date asc, then status (not done first)
+  const prioOrder = { high: 0, medium: 1, low: 2 };
+  const statusOrder = { todo: 0, progress: 1, blocked: 2, done: 3 };
+  filtered.sort((a,b) => {
+    if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+    if (prioOrder[a.priority] !== prioOrder[b.priority]) return prioOrder[a.priority] - prioOrder[b.priority];
+    if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate);
+    return 0;
+  });
+
+  let cardsHtml = '';
+  if (filtered.length === 0) {
+    cardsHtml = '<div class="task-empty">Žádné úkoly v tomto filtru.</div>';
+  } else {
+    filtered.forEach(t => {
+      const overdue = isOverdue(t);
+      const overdueClass = overdue ? 'overdue' : '';
+      const statusClass = 'status-' + t.status;
+      const prioClass = 'prio-' + t.priority;
+      const statusLabel = { todo:'Todo', progress:'In Progress', done:'Done', blocked:'Blokován' }[t.status] || t.status;
+      const statusCls = { todo:'st-todo', progress:'st-progress', done:'st-done', blocked:'st-blocked' }[t.status] || 'st-todo';
+      const prioLabel = { high:'Vysoká', medium:'Střední', low:'Nízká' }[t.priority] || '—';
+      const prioCls = { high:'pr-high', medium:'pr-medium', low:'pr-low' }[t.priority] || 'pr-medium';
+      const dueStr = t.dueDate ? new Date(t.dueDate).toLocaleDateString('cs') : '—';
+      const ownerStr = t.owner || '—';
+      const overdueWarn = overdue ? '<span class="task-overdue-warn">⚠ Po termínu</span>' : '';
+      const projectTag = t.project ? `<div class="task-project-tag">${escapeHtml(t.project)}</div>` : '';
+      cardsHtml += `<div class="task-card ${statusClass} ${prioClass} ${overdueClass}">
+        <div class="task-header">
+          <div style="flex:1">
+            ${projectTag}
+            <div class="task-title">${escapeHtml(t.title)}</div>
+          </div>
+          <div class="task-actions-icons">
+            <button class="task-icon-btn" onclick="openTaskForm('${deptId}','${t.id}')" title="Upravit">✏</button>
+            <button class="task-icon-btn" onclick="confirmDeleteTask('${t.id}','${deptId}')" title="Smazat">🗑</button>
+          </div>
+        </div>
+        ${t.desc ? '<div class="task-desc">' + escapeHtml(t.desc) + '</div>' : ''}
+        <div class="task-meta">
+          <span class="status-badge ${statusCls}">${statusLabel}</span>
+          <span class="prio-badge ${prioCls}">${prioLabel}</span>
+          <span class="task-meta-item">👤 ${escapeHtml(ownerStr)}</span>
+          <span class="task-meta-item">📅 ${dueStr}${overdueWarn}</span>
+        </div>
+      </div>`;
+    });
+  }
+
+  const counts = {
+    all: tasks.length,
+    todo: tasks.filter(t => t.status === 'todo').length,
+    progress: tasks.filter(t => t.status === 'progress').length,
+    blocked: tasks.filter(t => t.status === 'blocked').length,
+    done: tasks.filter(t => t.status === 'done').length,
+    overdue: tasks.filter(t => isOverdue(t)).length,
+  };
+
+  return `<div class="panel">
+    <div class="panel-header">
+      <span>✅ Action Plan / Tasky — operativní úkoly</span>
+      <div class="ph-right">
+        <span style="font-size:11px;opacity:.8">Celkem ${counts.all} · Po termínu ${counts.overdue}</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="tasks-bar">
+        <div class="tasks-filter">
+          <button class="${filter==='all'?'active':''}" onclick="setTaskFilter('${deptId}','all')">Vše (${counts.all})</button>
+          <button class="${filter==='todo'?'active':''}" onclick="setTaskFilter('${deptId}','todo')">Todo (${counts.todo})</button>
+          <button class="${filter==='progress'?'active':''}" onclick="setTaskFilter('${deptId}','progress')">In Progress (${counts.progress})</button>
+          <button class="${filter==='blocked'?'active':''}" onclick="setTaskFilter('${deptId}','blocked')">Blokován (${counts.blocked})</button>
+          <button class="${filter==='done'?'active':''}" onclick="setTaskFilter('${deptId}','done')">Done (${counts.done})</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select onchange="setTaskProjectFilter('${deptId}',this.value)" style="font-size:11px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-weight:600">
+            <option value="" ${!projectFilter?'selected':''}>Všechny projekty</option>
+            ${PROJECTS.map(p => `<option value="${escapeAttr(p)}" ${projectFilter===p?'selected':''}>${escapeHtml(p)}</option>`).join('')}
+          </select>
+          <button class="add-task-btn" onclick="openTaskForm('${deptId}',null)">+ Nový úkol</button>
+        </div>
+      </div>
+      <div class="tasks-grid">${cardsHtml}</div>
+    </div>
+  </div>`;
+}
+
+function setTaskFilter(deptId, filter) {
+  TASK_FILTERS[deptId] = filter;
+  const slideId = deptId === 'me' ? 's0' : (deptId === 'log' ? 's1' : 's2');
+  renderDept(deptId, slideId);
+  setTimeout(() => buildCharts(deptId), 60);
+}
+
+function setTaskProjectFilter(deptId, project) {
+  TASK_PROJECT_FILTERS[deptId] = project;
+  const slideId = deptId === 'me' ? 's0' : (deptId === 'log' ? 's1' : 's2');
+  renderDept(deptId, slideId);
+  setTimeout(() => buildCharts(deptId), 60);
+}
+
+function openTaskForm(deptId, taskId) {
+  const userSelect = document.getElementById('user-select');
+  const currentUser = userSelect ? userSelect.value : '';
+  if (!currentUser) { alert('Musíte se nejdřív přihlásit.'); return; }
+
+  let task = null;
+  if (taskId) {
+    const s = loadStore();
+    task = s.tasks && s.tasks[taskId];
+  }
+  const isEdit = !!task;
+
+  // Build a modal in #ev-modal slot (reuse)
+  const modal = document.getElementById('ev-modal');
+  const content = document.getElementById('ev-modal-content');
+  if (!modal || !content) return;
+
+  const projectOptions = PROJECTS.map(p => `<option value="${escapeAttr(p)}" ${task && task.project===p?'selected':''}>${escapeHtml(p)}</option>`).join('');
+
+  content.innerHTML = `
+    <h3>${isEdit ? '✏ Upravit úkol' : '+ Nový úkol'} — ${DEPTS[deptId].label}</h3>
+    <div class="task-modal-form" style="margin-top:14px">
+      <div>
+        <label>Projekt *</label>
+        <select id="tf-project">
+          <option value="">— vyberte projekt —</option>
+          ${projectOptions}
+        </select>
+      </div>
+      <div>
+        <label>Název úkolu *</label>
+        <input id="tf-title" type="text" placeholder="Stručný název úkolu" value="${task ? escapeAttr(task.title) : ''}">
+      </div>
+      <div>
+        <label>Popis problému / tasku</label>
+        <textarea id="tf-desc" placeholder="Detail problému, kontext, co je potřeba udělat...">${task ? escapeHtml(task.desc || '') : ''}</textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Owner *</label>
+          <input id="tf-owner" type="text" placeholder="Jméno odpovědné osoby" value="${task ? escapeAttr(task.owner || '') : currentUser}">
+        </div>
+        <div>
+          <label>Termín</label>
+          <input id="tf-due" type="date" value="${task && task.dueDate ? task.dueDate : ''}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Priorita</label>
+          <select id="tf-priority">
+            <option value="high" ${task && task.priority==='high'?'selected':''}>Vysoká</option>
+            <option value="medium" ${(!task || task.priority==='medium')?'selected':''}>Střední</option>
+            <option value="low" ${task && task.priority==='low'?'selected':''}>Nízká</option>
+          </select>
+        </div>
+        <div>
+          <label>Stav</label>
+          <select id="tf-status">
+            <option value="todo" ${(!task || task.status==='todo')?'selected':''}>Todo</option>
+            <option value="progress" ${task && task.status==='progress'?'selected':''}>In Progress</option>
+            <option value="blocked" ${task && task.status==='blocked'?'selected':''}>Blokován</option>
+            <option value="done" ${task && task.status==='done'?'selected':''}>Done</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn primary" onclick="saveTaskForm('${deptId}','${task ? task.id : ''}')">${isEdit ? 'Uložit změny' : 'Vytvořit úkol'}</button>
+        <button class="btn" onclick="closeEvModal()">Zrušit</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+  setTimeout(() => { const el = document.getElementById('tf-title'); if (el) el.focus(); }, 50);
+}
+
+function saveTaskForm(deptId, existingId) {
+  const project = document.getElementById('tf-project').value;
+  const title = document.getElementById('tf-title').value.trim();
+  const desc = document.getElementById('tf-desc').value.trim();
+  const owner = document.getElementById('tf-owner').value.trim();
+  const dueDate = document.getElementById('tf-due').value;
+  const priority = document.getElementById('tf-priority').value;
+  const status = document.getElementById('tf-status').value;
+
+  if (!project) { alert('Projekt je povinný.'); return; }
+  if (!title) { alert('Název úkolu je povinný.'); return; }
+  if (!owner) { alert('Owner je povinný.'); return; }
+
+  const userSelect = document.getElementById('user-select');
+  const currentUser = userSelect ? userSelect.value : 'Neznámý';
+  const now = new Date().toISOString();
+
+  let task;
+  if (existingId) {
+    const s = loadStore();
+    task = (s.tasks && s.tasks[existingId]) || {};
+    task.project = project;
+    task.title = title;
+    task.desc = desc;
+    task.owner = owner;
+    task.dueDate = dueDate;
+    task.priority = priority;
+    task.status = status;
+    task.updatedAt = now;
+    task.updatedBy = currentUser;
+  } else {
+    task = {
+      id: 't_' + Date.now().toString(),
+      deptId,
+      project, title, desc, owner, dueDate, priority, status,
+      createdAt: now,
+      createdBy: currentUser,
+      updatedAt: now,
+      updatedBy: currentUser,
+    };
+  }
+
+  saveTask(task);
+  closeEvModal();
+}
+
+function confirmDeleteTask(taskId, deptId) {
+  if (!confirm('Opravdu smazat tento úkol?')) return;
+  deleteTask(taskId);
+}
+
+// Simple HTML escape helper
+function escapeHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+
+function renderDept(deptId, slideId) {
+  const dept = DEPTS[deptId];
+  const el = document.getElementById(slideId);
+  const store = loadStore();
+
+  // KPI cards
+  // Last update info for this dept
+  const entries = (store.entries || []).filter(e => e.deptId === deptId);
+  const lastEntry = entries[0];
+  let lastUpdateBar = '';
+  if (lastEntry) {
+    const d = new Date(lastEntry.ts);
+    const dStr = d.toLocaleDateString('cs') + ' ' + d.toLocaleTimeString('cs',{hour:'2-digit',minute:'2-digit'});
+    const kpiObj = dept.kpis.find(k => k.id === lastEntry.kpiId);
+    const kpiName = kpiObj ? kpiObj.name : lastEntry.kpiId;
+    lastUpdateBar = `<div class="update-bar"><span class="update-icon">🕒</span> Poslední aktualizace: <strong>${lastEntry.editedBy || 'Neznámý uživatel'}</strong> — ${kpiName} → ${lastEntry.value!==null&&lastEntry.value!==undefined?(lastEntry.value.toFixed(lastEntry.value<10?2:1)+(lastEntry.kpiId==='log4'?' €':lastEntry.kpiId==='prod2'?' ks':' %')):'—'} <span class="update-time">· ${dStr}</span></div>`;
+  } else {
+    lastUpdateBar = `<div class="update-bar update-bar-empty"><span class="update-icon">⏳</span> Žádná data nebyla zatím zadána pro ${dept.label}</div>`;
+  }
+
+  let cardsHtml = lastUpdateBar + `<div class="hint-bar">&#9432;&nbsp; Klikni na KPI kartu pro zadání hodnoty s komentářem a důkazem. Bez evidence zůstane stav <span style="color:#E65100;font-weight:700">⚠ Čeká na verifikaci</span>.</div><div class="kpi-row">`;
+  dept.kpis.forEach(kpi => {
+    const cur = getCurrentValue(kpi);
+    const s = getStatus(cur, kpi);
+    const entries = (store.entries||[]).filter(e=>e.kpiId===kpi.id);
+    const lastEntry = entries[0];
+    const hasEvidence = lastEntry && lastEntry.evidenceType && lastEntry.evidenceType !== 'none';
+    const evIcon = !lastEntry ? '' : hasEvidence ? '<span class="evidence-flag" title="Evidence přiložena">✅</span>' : '<span class="evidence-flag" title="Čeká na verifikaci">⚠️</span>';
+    const band_card = getBand(cur, kpi);
+    const tlHtml = getTLHtml(band_card);
+    const displayStatus = !lastEntry ? s : (!hasEvidence ? 'pending' : s);
+
+    const bandCls = getBandClass(band_card);
+    cardsHtml += `<div class="kpi-card ${kpi.color} ${bandCls}" id="card-${kpi.id}" onclick="openEntry('${deptId}','${kpi.id}')">
+      ${evIcon}
+      <div class="kpi-label">${kpi.name}</div>
+      <div class="kpi-value ${VC[s]}" id="val-${kpi.id}">${fmtVal(cur, kpi)}</div>
+      <div class="kpi-sub">
+        <span class="mini-badge ${displayStatus==='pending'?'mb-pending':MB[s]}" id="badge-${kpi.id}">${displayStatus==='pending'?'⚠ Čeká na verifikaci':SL[s]}</span>
+        &nbsp;Target ${kpi.lb?'≤':'≥'} ${kpi.target}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'}
+      </div>
+      <div class="kpi-hint" id="tr-${kpi.id}">${trendTxt(kpi.data,kpi.lb)} · YTD ø ${ytd(kpi.data, kpi)}</div>
+    </div>`;
+  });
+  cardsHtml += '</div>';
+
+  // Entry form placeholder
+  const entryFormHtml = `<div id="ef-${deptId}" style="display:none"></div>`;
+
+  // Charts panel
+  let chartsHtml = `<div class="panel"><div class="panel-header"><span>Trendové grafy — posledních 6 měsíců</span><div class="ph-right"><div class="legend">
+    <div class="legend-item"><span class="leg-dash" style="background:rgba(255,255,255,.6)"></span>Target</div>
+    <div class="legend-item"><span class="leg-dash" style="background:var(--accent)"></span>Min threshold</div>
+  </div></div></div><div class="panel-body"><div class="chart-grid">`;
+  dept.kpis.forEach(kpi => {
+    chartsHtml += `<div><span class="section-title">${kpi.name}</span><div class="chart-wrap" style="height:170px"><canvas id="ch-${kpi.id}" role="img" aria-label="Trend ${kpi.name}"></canvas></div></div>`;
+  });
+  chartsHtml += '</div></div></div>';
+
+  // Overview table
+  let ovHtml = `<div class="panel"><div class="panel-header"><span>Přehled KPI — stav &amp; verifikace</span></div><div class="panel-body" style="padding:0"><table class="ov-table"><thead><tr>
+    <th style="width:28px">#</th><th>KPI</th><th class="c">Aktuální</th><th class="c">Target</th><th class="c">Min</th><th class="c">YTD ø</th><th class="c">Pásmo</th><th class="c">Evidence</th><th class="c">Stav</th>
+  </tr></thead><tbody id="ov-${deptId}">`;
+  dept.kpis.forEach((kpi,i) => {
+    const cur = getCurrentValue(kpi);
+    const s = getStatus(cur, kpi);
+    const band = getBand(cur, kpi);
+    const entries = (store.entries||[]).filter(e=>e.kpiId===kpi.id);
+    const last = entries[0];
+    const evStatus = !last ? '<span class="ev-badge ev-none">Bez záznamu</span>' : last.evidenceType==='none'||!last.evidenceType ? `<span class="ev-badge ev-pending" onclick="showEvDetail('${kpi.id}')" style="cursor:pointer">⚠ Čeká</span>` : `<span class="ev-badge ev-verified" onclick="showEvDetail('${kpi.id}')" style="cursor:pointer">✓ Ověřeno</span>`;
+    const apStatus = last && last.apAction ? `<span class="ap-badge">AP: ${last.apAction.slice(0,20)}...</span>` : '';
+    ovHtml += `<tr>
+      <td class="ov-num c">${i+1}</td>
+      <td><strong>${kpi.name}</strong><span class="pill">${kpi.weight} %</span>${apStatus}<br><span style="font-size:11px;color:var(--muted)">${kpi.sub}</span></td>
+      <td class="c" id="rv-${kpi.id}" style="font-weight:700">${fmtVal(cur, kpi)}</td>
+      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.target}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'}</td>
+      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.min}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'}</td>
+      <td class="c" id="ytd-ov-${kpi.id}">${ytd(kpi.data, kpi)}</td>
+      <td class="c" id="band-${kpi.id}"><strong>${band.label}</strong><br><span style="font-size:10px;color:var(--muted)">${band.pct} % bonusu</span></td>
+      <td class="c" id="ev-${kpi.id}">${evStatus}</td>
+      <td class="c" id="rvs-${kpi.id}"><span class="dot ${DC[s]}"></span>${SL[s]}</td>
+    </tr>`;
+  });
+  ovHtml += '</tbody></table></div></div>';
+
+  // Changelog HTML — last 5 changes for this dept
+  const deptEntries = (store.entries || []).filter(e => e.deptId === deptId).slice(0, 5);
+  let changelogHtml = `<div class="panel"><div class="panel-header"><span>📝 Historie změn — posledních 5 záznamů</span><button class="btn" style="background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:white;padding:4px 12px;font-size:11px" onclick="showHistory()">Zobrazit vše</button></div><div class="panel-body" style="padding:0">`;
+  if (deptEntries.length === 0) {
+    changelogHtml += '<div class="cl-empty">Žádné záznamy pro toto oddělení.</div>';
+  } else {
+    changelogHtml += `<table class="changelog-table"><thead><tr>
+      <th style="width:140px">Datum &amp; čas</th>
+      <th style="width:160px">Uživatel</th>
+      <th>KPI &amp; komentář</th>
+      <th class="c" style="width:90px">Hodnota</th>
+      <th class="c" style="width:110px">Evidence</th>
+    </tr></thead><tbody>`;
+    deptEntries.forEach(e => {
+      const kpiO = dept.kpis.find(k=>k.id===e.kpiId);
+      const dt = new Date(e.ts);
+      const dStr = dt.toLocaleDateString('cs') + ' ' + dt.toLocaleTimeString('cs',{hour:'2-digit',minute:'2-digit'});
+      const evBadge = e.evidenceType==='none'||!e.evidenceType
+        ? '<span class="ev-badge ev-none">Bez evidence</span>'
+        : `<span class="ev-badge ev-verified" onclick="showEvDetail('${e.kpiId}')" style="cursor:pointer">✓ Ověřeno</span>`;
+      const valStr = (e.value!==null&&e.value!==undefined) ? e.value.toFixed(2)+' %' : '—';
+      const comm = e.comment ? `<div class="cl-comment">"${e.comment}"</div>` : '';
+      changelogHtml += `<tr>
+        <td><span class="cl-time">${dStr}</span></td>
+        <td><span class="cl-user">${e.editedBy||'Neznámý'}</span></td>
+        <td><span class="cl-kpi">${kpiO?kpiO.name:e.kpiId}</span>${comm}</td>
+        <td class="c"><span class="cl-val">${valStr}</span></td>
+        <td class="c">${evBadge}</td>
+      </tr>`;
+    });
+    changelogHtml += '</tbody></table>';
+  }
+  changelogHtml += '</div></div>';
+
+  // Bonus calculation
+  const bonusHtml = renderBonus(deptId);
+
+  // Open action plans
+  const openAps = (store.entries||[]).filter(e => {
+    const kpiIds = dept.kpis.map(k=>k.id);
+    return kpiIds.includes(e.kpiId) && e.apAction && !e.apClosed;
+  });
+  let apHtml = '';
+  if (openAps.length > 0) {
+    apHtml = `<div class="panel"><div class="panel-header" style="background:#8B5E00"><span>⚠ Otevřené Action Plany (${openAps.length})</span></div><div class="panel-body">`;
+    openAps.forEach(ap => {
+      const kpi = dept.kpis.find(k=>k.id===ap.kpiId);
+      apHtml += `<div class="ap-open"><strong>${kpi?kpi.name:ap.kpiId}</strong> — ${ap.month||''}<br>
+        <b>Root cause:</b> ${ap.apCause||'—'}<br>
+        <b>Action:</b> ${ap.apAction||'—'}<br>
+        <b>Owner:</b> ${ap.apOwner||'—'} &nbsp;·&nbsp; <b>Due:</b> ${ap.apDue||'—'}
+        <button class="btn" style="margin-top:6px;padding:4px 10px;font-size:11px" onclick="closeAp('${ap.id}','${deptId}','${slideId}')">Uzavřít AP</button>
+      </div>`;
+    });
+    apHtml += '</div></div>';
+  }
+
+  // Tasks/Action Plan panel
+  const tasksHtml = renderTasksPanel(deptId);
+
+  // People Development panel (informative, no bonus)
+  const peopleDevHtml = renderPeopleDevPanel(deptId);
+
+  el.innerHTML = cardsHtml + entryFormHtml + apHtml + chartsHtml + ovHtml + changelogHtml + peopleDevHtml + tasksHtml + bonusHtml;
+}
+
+function renderBonus(deptId) {
+  const dept = DEPTS[deptId];
+  const MAX_VS = 16.3; // max variabilní složka v % ze základní mzdy
+  let totalPct = 0;
+  let cardsHtml = '';
+  dept.kpis.forEach(kpi => {
+    const cur = getCurrentValue(kpi);
+    const band = getBand(cur, kpi);
+    const contrib = (kpi.weight / 100) * band.pct;
+    totalPct += contrib;
+    const col = band.pct===100?'var(--green)':band.pct>=80?'var(--mid)':band.pct>=50?'var(--amber)':'var(--red)';
+    const curDisplay = fmtVal(cur, kpi);
+    const attStr = (band.attainment === null || isNaN(band.attainment)) ? '—' : band.attainment.toFixed(1) + ' %';
+    cardsHtml += `<div class="bonus-card">
+      <div class="bonus-kpi">${kpi.name.slice(0,28)}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--dark);margin-top:6px">${curDisplay}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:1px">aktuální hodnota</div>
+      <div style="border-top:1px dashed var(--border);margin:8px 0;"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--text)">${attStr}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:1px">plnění vůči Targetu</div>
+      <div style="margin-top:6px"><span class="bonus-band" style="font-weight:700;color:${col}">${band.label}</span> <span style="font-size:10px;color:var(--muted)">→ ${band.pct} % bonusu</span></div>
+      <div style="font-size:11px;color:var(--dark);margin-top:6px;background:var(--bg);padding:4px 6px;border-radius:4px">
+        25 % × ${band.pct} % = <strong>${contrib.toFixed(1)} %</strong>
+      </div>
+    </div>`;
+  });
+  const col = totalPct>=80?'#27AE60':totalPct>=50?'#F39C12':'#C0392B';
+  const finalVS = (MAX_VS * totalPct / 100).toFixed(2);
+
+  return `<div class="bonus-panel">
+    <div class="bonus-header">💰 Výpočet variabilní složky — aktuální měsíc</div>
+    <div class="bonus-body">
+
+      <div class="rag-legend-panel" style="margin-bottom:18px">
+        <div class="rag-legend-header">
+          <h3>🚦 Legenda hodnocení &amp; RAG škála</h3>
+          <span class="badge-info">Jednotná škála napříč celým dashboardem</span>
+        </div>
+        <div class="rag-legend-body">
+          <div class="rag-legend-intro">
+            Každé KPI má pevně dané pásmo hodnocení. Skóre KPI se transformuje na % bonusu, který se násobí váhou KPI (25 %).
+            Součet ze všech 4 KPI dává <strong>celkové plnění bonusu</strong>. Maximum (100 %) odpovídá variabilní složce <strong>${MAX_VS} % ze základní mzdy</strong>.
+          </div>
+
+          <div class="rag-scale">
+            <div class="rag-zone" style="flex:35;background:linear-gradient(90deg,#B91C1C,#DE350B)">
+              <span class="rag-zone-label">🔴 Nesplněno</span>
+              <span class="rag-zone-desc">0 % bonusu</span>
+            </div>
+            <div class="rag-zone" style="flex:25;background:linear-gradient(90deg,#D97706,#FF8B00)">
+              <span class="rag-zone-label">🟡 Částečně</span>
+              <span class="rag-zone-desc">50 % bonusu</span>
+            </div>
+            <div class="rag-zone" style="flex:40;background:linear-gradient(90deg,#00875A,#36B37E)">
+              <span class="rag-zone-label">🟢 Výborný / Splněno</span>
+              <span class="rag-zone-desc">100 % bonusu</span>
+            </div>
+          </div>
+          <div class="rag-axis"><span>Pod tolerancí</span><span>Min threshold</span><span>Target</span><span>100 %+</span></div>
+
+          <div class="rag-grid">
+            <div class="rag-card zone-green">
+              <div class="rag-card-head">
+                <span class="rag-icon">🟢</span>
+                <span class="rag-card-title">Výborný</span>
+                <span class="rag-card-value" style="color:var(--green)">100 %</span>
+              </div>
+              <div class="rag-card-desc">Dosažen plný Target — KPI je v ideálním stavu, není potřeba zásah.</div>
+            </div>
+            <div class="rag-card zone-green">
+              <div class="rag-card-head">
+                <span class="rag-icon">🟢</span>
+                <span class="rag-card-title">Splněno</span>
+                <span class="rag-card-value" style="color:var(--green)">100 %</span>
+              </div>
+              <div class="rag-card-desc">Hodnota mezi Min a Target — manažer dostává plný bonus.</div>
+            </div>
+            <div class="rag-card zone-amber">
+              <div class="rag-card-head">
+                <span class="rag-icon">🟡</span>
+                <span class="rag-card-title">Částečně</span>
+                <span class="rag-card-value" style="color:var(--amber)">50 %</span>
+              </div>
+              <div class="rag-card-desc">Pod Min thresholdem, ale ještě v toleranci — povinný Action Plan.</div>
+            </div>
+            <div class="rag-card zone-red">
+              <div class="rag-card-head">
+                <span class="rag-icon">🔴</span>
+                <span class="rag-card-title">Nesplněno</span>
+                <span class="rag-card-value" style="color:var(--red)">0 %</span>
+              </div>
+              <div class="rag-card-desc">Pod tolerancí — bonus se neuděluje, vyžaduje okamžitý zásah.</div>
+            </div>
+          </div>
+
+          <div class="rag-modifier-row">
+            <div class="rag-mod-card" style="border-left-color:var(--mid)">
+              <span class="rag-mod-icon">📊</span>
+              <div class="rag-mod-text"><strong>Vzorec:</strong> Váha KPI (25 %) × % bonusu pásma = příspěvek k celkovému plnění</div>
+            </div>
+            <div class="rag-mod-card" style="border-left-color:var(--purple)">
+              <span class="rag-mod-icon">📎</span>
+              <div class="rag-mod-text"><strong>Evidence povinná:</strong> i pro zelené výsledky — screenshot, URL nebo číslo reportu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bonus-grid">${cardsHtml}</div>
+
+      <div class="bonus-total">
+        <div>
+          <div class="bonus-total-label">Celkové plnění bonusu</div>
+          <div class="bonus-formula">Součet příspěvků ze všech 4 KPI</div>
+        </div>
+        <div style="text-align:right">
+          <div class="bonus-total-val" style="color:${col}">${totalPct.toFixed(1)} %</div>
+          <div style="font-size:12px;opacity:.85;margin-top:2px">= <strong>${finalVS} %</strong> ze základní mzdy <span style="opacity:.6">(z max. ${MAX_VS} %)</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+// ─── ENTRY FORM ───────────────────────────────────────────────────────────────
+function formTLHtml(band, val, kpi) {
+  const cls = {'Výborný':'tl-excellent','Splněno':'tl-good','Částečně':'tl-warning','Nesplněno':'tl-danger','Bez dat':''}[band.label]||'';
+  const bcls = {'Výborný':'excellent','Splněno':'good','Částečně':'warning','Nesplněno':'danger','Bez dat':'none'}[band.label]||'none';
+  const lights = {'Výborný':[1,0,0,0],'Splněno':[0,1,0,0],'Částečně':[0,0,1,0],'Nesplněno':[0,0,0,1],'Bez dat':[0,0,0,0]}[band.label]||[0,0,0,0];
+  const lits = ['lit-g','lit-lg','lit-a','lit-r'];
+  const dcls = ['tl-dot-g','tl-dot-lg','tl-dot-a','tl-dot-r'];
+  let dots = lights.map((on,i)=>`<div class="form-tl-dot ${dcls[i]} ${on?lits[i]:''}" ></div>`).join('');
+  const valStr = (val===null||isNaN(val)) ? '—' : (kpi.unit==='€' ? Math.round(val).toLocaleString('cs-CZ')+' €' : (kpi.id==='prod2' ? Math.round(val)+' ks' : (val<10?val.toFixed(2):val.toFixed(1))+' %'));
+  const isOk = band.label==='Výborný'||band.label==='Splněno';
+  const optNote = isOk ? `<div class="optional-note" style="color:#9A6000">⚠ Evidence je povinná i pro zelené výsledky</div>` : '';
+  return `<div class="form-tl-wrap ${cls}" id="form-tl-${kpi.id}">
+    <div class="form-tl-lights">${dots}</div>
+    <div class="form-tl-info">
+      <div class="form-tl-val">${valStr}</div>
+      <div class="form-tl-band ${bcls}">${band.label} &nbsp;·&nbsp; ${band.pct} % bonusu &nbsp;·&nbsp; plnění ${(band.attainment===null||isNaN(band.attainment))?'—':band.attainment.toFixed(1)} %</div>
+      <div class="form-tl-target">Target ${kpi.lb?'≤':'≥'} ${kpi.target}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'} &nbsp;·&nbsp; Min ${kpi.lb?'≤':'≥'} ${kpi.min} %</div>
+      ${optNote}
+    </div>
+  </div>`;
+}
+
+function updateFormTL(kpiId, deptId) {
+  const kpi = DEPTS[deptId].kpis.find(k=>k.id===kpiId);
+  if (!kpi) return;
+  // Use last closed (current) month for semafor
+  const lastIdx = lastClosedMonthIdx();
+  const inp = document.getElementById('inp-' + kpiId + '-' + lastIdx);
+  let val = inp ? parseFloat(inp.value) : NaN;
+  // Fallback: if current month is empty, take last available value from earlier months
+  if (isNaN(val)) {
+    for (let i = lastIdx - 1; i >= 0; i--) {
+      const e = document.getElementById('inp-' + kpiId + '-' + i);
+      const v = e ? parseFloat(e.value) : NaN;
+      if (!isNaN(v)) { val = v; break; }
+    }
+  }
+  const band = getBand(isNaN(val)?null:val, kpi);
+  const isOk = band.label==='Výborný'||band.label==='Splněno';
+
+  // Update TL widget
+  const tlEl = document.getElementById('form-tl-' + kpiId);
+  if (tlEl) {
+    const cls = {'Výborný':'tl-excellent','Splněno':'tl-good','Částečně':'tl-warning','Nesplněno':'tl-danger','Bez dat':''}[band.label]||'';
+    tlEl.className = 'form-tl-wrap ' + cls;
+    const lights = {'Výborný':[1,0,0,0],'Splněno':[0,1,0,0],'Částečně':[0,0,1,0],'Nesplněno':[0,0,0,1],'Bez dat':[0,0,0,0]}[band.label]||[0,0,0,0];
+    const lits = ['lit-g','lit-lg','lit-a','lit-r'];
+    const dcls = ['tl-dot-g','tl-dot-lg','tl-dot-a','tl-dot-r'];
+    const dots = tlEl.querySelector('.form-tl-lights');
+    if (dots) dots.innerHTML = lights.map((on,i)=>`<div class="form-tl-dot ${dcls[i]} ${on?lits[i]:''}" ></div>`).join('');
+    const valEl = tlEl.querySelector('.form-tl-val');
+    if (valEl) valEl.textContent = isNaN(val) ? '—' : (kpi.unit==='€' ? Math.round(val).toLocaleString('cs-CZ')+' €' : (kpi.id==='prod2' ? Math.round(val)+' ks' : (val<10?val.toFixed(2):val.toFixed(1))+' %'));
+    const bandEl = tlEl.querySelector('.form-tl-band');
+    const bcls = {'Výborný':'excellent','Splněno':'good','Částečně':'warning','Nesplněno':'danger','Bez dat':'none'}[band.label]||'none';
+    if (bandEl) { bandEl.className = 'form-tl-band ' + bcls; bandEl.textContent = band.label + ' · ' + band.pct + ' % bonusu · plnění ' + ((band.attainment===null||isNaN(band.attainment))?'—':band.attainment.toFixed(1)) + ' %'; }
+    const noteEl = tlEl.querySelector('.optional-note');
+    if (noteEl) noteEl.remove();
+    if (isOk) {
+      const note = document.createElement('div'); note.className = 'optional-note';
+      note.textContent = '✓ Výsledek je OK — komentář, evidence a action plan jsou volitelné';
+      tlEl.querySelector('.form-tl-info').appendChild(note);
+    }
+  }
+
+  // Show/hide ONLY action plan (evidence stays always visible)
+  const apSection = document.getElementById('ap-section-' + kpiId);
+  if (apSection) apSection.style.display = (!isOk) ? 'block' : 'none';
+
+  // Update required stars
+  const commentLbl = document.getElementById('comment-lbl-' + kpiId);
+  const validatorLbl = document.getElementById('validator-lbl-' + kpiId);
+  if (commentLbl) commentLbl.innerHTML = 'Komentář k aktuálnímu měsíci' + (isOk ? '' : ' <span class="required-star">*</span>');
+  if (validatorLbl) validatorLbl.innerHTML = 'Systémový zdroj dat' + (isOk ? '' : ' <span class="required-star">*</span>');
+
+  // Update placeholder text based on result (positive vs. negative)
+  const commentInp = document.getElementById('comment-' + kpiId);
+  if (commentInp) {
+    commentInp.placeholder = isOk
+      ? 'Co se zlepšilo? Jaký krok / opatření pomohlo? Co je hlavní příčina úspěchu?'
+      : 'Co za číslem stojí? Kde jsou rezervy? Co ovlivnilo výsledek?';
+  }
+}
+
+function openEntry(deptId, kpiId) {
+  const userSelect = document.getElementById('user-select');
+  const currentUser = userSelect ? userSelect.value : '';
+  if (!currentUser) { alert('Musíte se nejdřív přihlásit.'); return; }
+  // Role-based write access: user can only edit their own dept (OM can edit any)
+  const u = USERS[currentUser];
+  if (u && !ROLE_ACCESS[u.role].includes(deptId)) {
+    alert('Nemáte oprávnění upravovat KPI tohoto oddělení.');
+    return;
+  }
+  const dept = DEPTS[deptId];
+  const kpi = dept.kpis.find(k=>k.id===kpiId);
+  if (!kpi) return;
+  activeEdit = { deptId, kpiId };
+  const cur = getCurrentValue(kpi);
+  const band = getBand(cur, kpi);
+  const isOk = band.label==='Výborný'||band.label==='Splněno';
+
+  let mf = '';
+  const activeMonthIdx = lastClosedMonthIdx();
+  MONTHS.forEach((m,i) => {
+    // Skip future months entirely
+    if (i > activeMonthIdx) return;
+    const v = kpi.data[i]!==null&&!isNaN(kpi.data[i]) ? kpi.data[i] : '';
+    const onchange = `oninput="updateFormTL('${kpiId}','${deptId}')"`;
+    const currentMark = i === activeMonthIdx ? ' style="border-color:var(--mid);font-weight:700"' : '';
+    const unitLabel = kpi.unit === '€' ? '€' : (kpi.id === 'prod2' ? 'ks' : '%');
+    mf += `<div class="m-field"><label class="m-lbl">${m}</label><input class="m-inp" type="number" step="0.01" id="inp-${kpiId}-${i}" value="${v}" placeholder="—" ${onchange}${currentMark}><span class="m-unit">${unitLabel}</span></div>`;
+  });
+
+  const formHtml = `<div class="entry-form">
+    <div class="entry-header">
+      <span>✏ Zadání hodnot — ${kpi.name}</span>
+      <button class="btn" style="background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:white" onclick="closeEntry('${deptId}')">✕ Zrušit</button>
+    </div>
+    <div class="entry-body">
+
+      <div>
+        <div class="entry-section">Hodnoty od ledna do aktuálního měsíce (${MONTH_NAMES[lastClosedMonthIdx()]}) — semafor reaguje na aktuální měsíc</div>
+        <div class="month-grid">${mf}</div>
+      </div>
+
+      ${formTLHtml(band, cur, kpi)}
+
+      <div id="opt-sections-${kpiId}" style="display:flex;flex-direction:column;gap:14px">
+        <div class="comment-row">
+          <div class="m-field">
+            <label class="m-lbl" id="comment-lbl-${kpiId}">Komentář k aktuálnímu měsíci${isOk?'':' <span class="required-star">*</span>'}</label>
+            <textarea class="m-inp" id="comment-${kpiId}" placeholder="${isOk ? 'Co se zlepšilo? Jaký krok / opatření pomohlo? Co je hlavní příčina úspěchu?' : 'Co za číslem stojí? Kde jsou rezervy? Co ovlivnilo výsledek?'}" rows="3"></textarea>
+            <div class="validation-msg" id="vmsg-comment-${kpiId}">Komentář je povinný — bez kontextu nelze číslo přijmout.</div>
+          </div>
+          <div class="m-field">
+            <label class="m-lbl" id="validator-lbl-${kpiId}">Systémový zdroj dat${isOk?'':' <span class="required-star">*</span>'}</label>
+            <input class="m-inp" id="validator-${kpiId}" placeholder="Název systému, číslo reportu nebo datum exportu" value="${kpi.systemSource||''}">
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Výchozí zdroj: <strong>${kpi.systemSource||kpi.source}</strong></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="entry-section">Evidence — důkaz správnosti dat <span class="required-star">*</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Datový zdroj: <strong>${kpi.source}</strong></div>
+          <div class="evidence-row">
+            <div class="m-field">
+              <label class="m-lbl">Typ evidence</label>
+              <select class="m-inp" id="ev-type-${kpiId}" onchange="toggleEvFields('${kpiId}')">
+                <option value="none">— vyberte typ —</option>
+                <option value="screenshot">Screenshot ze systému</option>
+                <option value="url">URL / odkaz na report</option>
+                <option value="report">Číslo reportu / reference</option>
+              </select>
+            </div>
+            <div class="m-field" id="ev-url-field-${kpiId}" style="display:none">
+              <label class="m-lbl">URL nebo číslo reportu</label>
+              <input class="m-inp" id="ev-url-${kpiId}" placeholder="https:// nebo ID reportu">
+            </div>
+            <div class="m-field" id="ev-img-field-${kpiId}" style="display:none">
+              <label class="m-lbl">Screenshot (obrázek)</label>
+              <input class="m-inp" type="file" accept="image/*" id="ev-img-${kpiId}" style="padding:5px">
+            </div>
+          </div>
+        </div>
+
+        <div id="ap-section-${kpiId}" style="display:${(!isOk)?'block':'none'}">
+          <div class="ap-panel">
+            <div class="ap-title">⚠ KPI je mimo target — Action Plan je povinný</div>
+            <div class="ap-grid">
+              <div class="m-field"><label class="m-lbl">Root cause <span class="required-star">*</span></label><textarea class="ap-inp" id="ap-cause-${kpiId}" placeholder="Popište kořenovou příčinu odchylky..."></textarea></div>
+              <div class="m-field"><label class="m-lbl">Nápravné opatření <span class="required-star">*</span></label><textarea class="ap-inp" id="ap-action-${kpiId}" placeholder="Co konkrétně uděláte?"></textarea></div>
+              <div>
+                <div class="m-field"><label class="m-lbl">Owner <span class="required-star">*</span></label><input class="ap-inp" id="ap-owner-${kpiId}" placeholder="Jméno zodpovědné osoby"></div>
+                <div class="m-field" style="margin-top:8px"><label class="m-lbl">Termín</label><input class="ap-inp" type="date" id="ap-due-${kpiId}"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry-actions">
+        <button class="btn primary" onclick="saveEntry_form('${deptId}','${kpiId}')">💾 Uložit &amp; aktualizovat</button>
+        <button class="btn" onclick="closeEntry('${deptId}')">Zrušit</button>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px">${isOk ? 'Evidence je povinná i pro zelené výsledky' : '* Povinné pole'}</span>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('ef-' + deptId).innerHTML = formHtml;
+  document.getElementById('ef-' + deptId).style.display = 'block';
+  document.getElementById('ef-' + deptId).scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function toggleEvFields(kpiId) {
+  const type = document.getElementById('ev-type-' + kpiId).value;
+  document.getElementById('ev-url-field-' + kpiId).style.display = (type==='url'||type==='report') ? 'block' : 'none';
+  document.getElementById('ev-img-field-' + kpiId).style.display = type==='screenshot' ? 'block' : 'none';
+}
+
+function closeEntry(deptId) {
+  const ef = document.getElementById('ef-' + deptId);
+  if (ef) ef.style.display = 'none';
+  activeEdit = null;
+}
+
+async function saveEntry_form(deptId, kpiId) {
+  const dept = DEPTS[deptId];
+  const kpi = dept.kpis.find(k=>k.id===kpiId);
+  const comment = document.getElementById('comment-' + kpiId);
+  const validator = document.getElementById('validator-' + kpiId);
+  const evType = document.getElementById('ev-type-' + kpiId);
+
+  // Read current values FIRST to determine if it's OK (green/light green)
+  const activeIdx_save = lastClosedMonthIdx();
+  MONTHS.forEach((_,i) => {
+    if (i > activeIdx_save) return; // skip future months
+    const inp = document.getElementById('inp-' + kpiId + '-' + i);
+    const v = inp ? parseFloat(inp.value) : NaN;
+    kpi.data[i] = isNaN(v) ? null : v;
+  });
+  const cur = getCurrentValue(kpi);
+  const band = getBand(cur, kpi);
+  const isOk = band.label==='Výborný' || band.label==='Splněno';
+
+  // Validation: comment required if not OK; evidence required always
+  if (!isOk) {
+    if (!comment || !comment.value.trim()) {
+      const e = document.getElementById('vmsg-comment-' + kpiId);
+      if (e) e.style.display = 'block';
+      if (comment) comment.scrollIntoView({behavior:'smooth',block:'nearest'});
+      return;
+    }
+  }
+  if (!evType || !evType.value || evType.value === 'none') {
+    alert('Evidence je povinná. Vyber typ evidence (screenshot, URL nebo číslo reportu).');
+    if (evType) evType.scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
+  // Check if the evidence value matches the type
+  if (evType.value === 'screenshot') {
+    const imgInp = document.getElementById('ev-img-' + kpiId);
+    if (!imgInp || !imgInp.files || !imgInp.files[0]) {
+      alert('Nahraj screenshot jako důkaz.');
+      return;
+    }
+  } else if (evType.value === 'url' || evType.value === 'report') {
+    const urlInp = document.getElementById('ev-url-' + kpiId);
+    if (!urlInp || !urlInp.value.trim()) {
+      alert('Zadej URL nebo číslo reportu.');
+      if (urlInp) urlInp.focus();
+      return;
+    }
+  }
+
+  try {
+    // Persist KPI data (month values) to Firebase
+    persistKpiData(kpiId, kpi.data);
+
+    // Handle screenshot
+    let imgData = null;
+    if (evType && evType.value === 'screenshot') {
+      const imgInp = document.getElementById('ev-img-' + kpiId);
+      if (imgInp && imgInp.files && imgInp.files[0]) {
+        imgData = await new Promise(res => {
+          const r = new FileReader();
+          r.onload = e => res(e.target.result);
+          r.readAsDataURL(imgInp.files[0]);
+        });
+      }
+    }
+
+    // Helper to safely read an input value as string
+    const readVal = (id) => {
+      const el = document.getElementById(id);
+      return el && el.value ? String(el.value) : '';
+    };
+
+    // Build entry — IMPORTANT: Firebase rejects undefined, so use null or empty string
+    const userSelect = document.getElementById('user-select');
+    const currentUser = userSelect ? userSelect.value : 'Neznámý';
+    const entry = {
+      id: Date.now().toString(),
+      kpiId: kpiId || '',
+      deptId: deptId || '',
+      editedBy: currentUser,
+      month: MONTHS[5] + ' ' + (new Date()).getFullYear(),
+      value: (cur === null || cur === undefined || isNaN(cur)) ? null : cur,
+      comment: comment ? comment.value.trim() : '',
+      validator: validator ? validator.value.trim() : '',
+      evidenceType: evType ? (evType.value || 'none') : 'none',
+      evidenceUrl: readVal('ev-url-' + kpiId),
+      evidenceImg: imgData || '',
+      apCause: readVal('ap-cause-' + kpiId),
+      apAction: readVal('ap-action-' + kpiId),
+      apOwner: readVal('ap-owner-' + kpiId),
+      apDue: readVal('ap-due-' + kpiId),
+      apClosed: false,
+      ts: new Date().toISOString(),
+    };
+
+    saveEntry(entry);
+
+    // Re-render dept
+    const slideId = deptId === 'me' ? 's0' : (deptId === 'log' ? 's1' : 's2');
+    renderDept(deptId, slideId);
+    setTimeout(() => buildCharts(deptId), 60);
+    updatePendingBadge();
+    closeEntry(deptId);
+  } catch (err) {
+    console.error('Save error:', err);
+    alert('Chyba při ukládání: ' + (err && err.message ? err.message : err));
+  }
+}
+
+// ─── CLOSE ACTION PLAN ────────────────────────────────────────────────────────
+function closeAp(entryId, deptId, slideId) {
+  const store = loadStore();
+  const entry = (store.entries||[]).find(e=>e.id===entryId);
+  if (entry) { entry.apClosed = true; saveStore(store); }
+  renderDept(deptId, slideId);
+  setTimeout(() => buildCharts(deptId), 60);
+}
+
+// ─── EVIDENCE DETAIL ──────────────────────────────────────────────────────────
+function showEvDetail(kpiId) {
+  const store = loadStore();
+  const entries = (store.entries||[]).filter(e=>e.kpiId===kpiId);
+  const last = entries[0];
+  if (!last) return;
+  let html = `<h3>Evidence — ${kpiId}</h3>
+    <p><strong>Měsíc:</strong> ${last.month} &nbsp;·&nbsp; <strong>Hodnota:</strong> ${last.value!==undefined?last.value.toFixed(2):'—'} %</p>
+    <p><strong>Komentář:</strong> ${last.comment||'—'}</p>
+    <p><strong>Validátor:</strong> ${last.validator||'—'}</p>
+    <p><strong>Typ evidence:</strong> ${last.evidenceType||'—'}</p>`;
+  if (last.evidenceUrl) html += `<p><strong>Odkaz / reference:</strong> <a href="${last.evidenceUrl}" target="_blank" style="color:var(--mid)">${last.evidenceUrl}</a></p>`;
+  if (last.evidenceImg) html += `<p><strong>Screenshot:</strong></p><img src="${last.evidenceImg}" class="ev-img">`;
+  if (last.apAction) {
+    html += `<hr style="margin:12px 0;border:none;border-top:1px solid var(--border)">
+    <p><strong>Action Plan:</strong></p>
+    <p><strong>Root cause:</strong> ${last.apCause||'—'}</p>
+    <p><strong>Opatření:</strong> ${last.apAction}</p>
+    <p><strong>Owner:</strong> ${last.apOwner||'—'} &nbsp;·&nbsp; <strong>Termín:</strong> ${last.apDue||'—'}</p>
+    <p><strong>Stav:</strong> ${last.apClosed?'✅ Uzavřeno':'⏳ Otevřeno'}</p>`;
+  }
+  document.getElementById('ev-modal-content').innerHTML = html;
+  document.getElementById('ev-modal').style.display = 'flex';
+}
+function closeEvModal() {
+  document.getElementById('ev-modal').style.display='none';
+  const m = document.querySelector('#ev-modal .modal');
+  if (m) m.classList.remove('pd-state-green','pd-state-red','pd-state-gray');
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
+function showHistory() {
+  const store = loadStore();
+  const entries = store.entries || [];
+  if (!entries.length) {
+    document.getElementById('hist-content').innerHTML = '<p style="color:var(--muted);font-style:italic">Žádné záznamy.</p>';
+  } else {
+    const allKpis = [...DEPTS.me.kpis, ...DEPTS.log.kpis, ...DEPTS.prod.kpis];
+    let html = `<table class="hist-table"><thead><tr>
+      <th>Datum</th><th>Uživatel</th><th>KPI</th><th>Hodnota</th><th>Zdroj dat</th><th>Evidence</th><th>Action Plan</th>
+    </tr></thead><tbody>`;
+    entries.forEach(e => {
+      const kpi = allKpis.find(k=>k.id===e.kpiId);
+      const evBadge = e.evidenceType==='none'||!e.evidenceType
+        ? '<span class="ev-badge ev-none">Bez evidence</span>'
+        : `<span class="ev-badge ev-verified" onclick="showEvDetail('${e.kpiId}')" style="cursor:pointer">✓ ${e.evidenceType}</span>`;
+      const apBadge = e.apAction ? `<span class="ap-badge">${e.apClosed?'✅':'⏳'} ${e.apAction.slice(0,25)}...</span>` : '—';
+      const d = new Date(e.ts);
+      html += `<tr>
+        <td>${d.toLocaleDateString('cs')} ${d.toLocaleTimeString('cs',{hour:'2-digit',minute:'2-digit'})}</td>
+        <td><strong>${e.editedBy || 'Neznámý'}</strong></td>
+        <td><strong>${kpi?kpi.name:e.kpiId}</strong><div class="hist-comment">${e.comment||'—'}</div></td>
+        <td style="font-weight:700">${e.value!==undefined&&e.value!==null?e.value.toFixed(2)+' %':'—'}</td>
+        <td>${e.validator||'—'}</td>
+        <td>${evBadge}</td>
+        <td>${apBadge}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('hist-content').innerHTML = html;
+  }
+  document.getElementById('hist-modal').style.display = 'flex';
+}
+function closeHistory() { document.getElementById('hist-modal').style.display='none'; }
+
+function clearData() {
+  if (!confirm('Opravdu smazat VŠECHNA uložená data a historii ze sdílené databáze? Tato akce smaže data pro VŠECHNY uživatele a je nevratná.')) return;
+  db.ref('store').remove().then(() => location.reload());
+}
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+function buildCharts(deptId) {
+  // Per-month band colors for points (line stays neutral)
+  const POINT_COLORS = {
+    'Výborný':   '#27AE60',  // green
+    'Splněno':   '#27AE60',  // green (Splněno = 100% bonus, treat same green)
+    'Částečně':  '#F39C12',  // amber
+    'Nesplněno': '#C0392B',  // red
+    'Bez dat':   '#95A5A6',  // gray
+  };
+  const NEUTRAL = '#1B3A5C'; // dark navy line
+  DEPTS[deptId].kpis.forEach(kpi => {
+    const canvas = document.getElementById('ch-' + kpi.id);
+    if (!canvas) return;
+    if (charts[kpi.id]) { charts[kpi.id].destroy(); delete charts[kpi.id]; }
+    const activeIdx = lastClosedMonthIdx();
+    const dataVals = kpi.data.slice(0, activeIdx + 1).map(v => v === null ? NaN : v);
+    const labelsVis = MONTHS.slice(0, activeIdx + 1);
+    // Compute per-point color based on each month's band
+    const pointColors = kpi.data.slice(0, activeIdx + 1).map(v => {
+      if (v === null || isNaN(v)) return '#95A5A6';
+      const b = getBand(v, kpi);
+      return POINT_COLORS[b.label] || '#95A5A6';
+    });
+    const pointBorders = pointColors.map(() => '#ffffff');
+    const visibleCount = activeIdx + 1;
+    charts[kpi.id] = new Chart(canvas, {
+      type:'line',
+      data:{
+        labels: labelsVis,
+        datasets:[
+          {
+            label:'Hodnota',
+            data: dataVals,
+            borderColor: NEUTRAL,
+            backgroundColor: 'rgba(27,58,92,0.06)',
+            borderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: pointColors,
+            pointBorderColor: pointBorders,
+            pointBorderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            spanGaps: false,
+          },
+          { label:'Target', data:Array(visibleCount).fill(kpi.target), borderColor:'rgba(39,174,96,.6)', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false },
+          { label:'Min', data:Array(visibleCount).fill(kpi.min), borderColor:'rgba(192,57,43,.6)', borderWidth:1.5, borderDash:[3,3], pointRadius:0, fill:false },
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            callbacks:{
+              label: ctx => {
+                const unit = kpi.unit === '€' ? ' €' : (kpi.id === 'prod2' ? ' ks' : ' %');
+                const fmt = (v) => kpi.unit === '€' ? Math.round(v).toLocaleString('cs-CZ') + ' €' : (kpi.id === 'prod2' ? v.toFixed(0) + ' ks' : v.toFixed(2) + ' %');
+                if (ctx.datasetIndex !== 0) return ctx.dataset.label + ': ' + fmt(ctx.parsed.y);
+                if (isNaN(ctx.parsed.y)) return ' — bez dat';
+                const b = getBand(ctx.parsed.y, kpi);
+                return ' ' + fmt(ctx.parsed.y) + '  ·  ' + b.label;
+              }
+            }
+          }
+        },
+        scales:{
+          x:{grid:{display:false}, ticks:{font:{size:11},color:'#aaa'}},
+          y:{grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{size:11},color:'#aaa',maxTicksLimit:5,callback:v=>v.toFixed(1)}}
+        }
+      }
+    });
+  });
+}
+
+// ─── TAB NAV ─────────────────────────────────────────────────────────────────
+function go(idx, el) {
+  document.querySelectorAll('.sl').forEach((s,i)=>s.classList.toggle('on',i===idx));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if (idx === 3) {
+    // Legenda tab — render content if not already
+    renderLegenda();
+    return;
+  }
+  const id = idx===0?'me':(idx===1?'log':'prod');
+  setTimeout(()=>buildCharts(id),60);
+}
+
+function renderLegenda() {
+  const el = document.getElementById('s3');
+  if (!el) return;
+  el.innerHTML = buildLegendaHtml();
+}
+
+function thresholdPills(kpi) {
+  // For lb=false (higher better): Výborný ≥ target, Splněno ≥ band[1], Částečně ≥ band[2], pod = Nesplněno
+  // For lb=true (lower better): Výborný ≤ target, ...
+  const op = kpi.lb ? '≤' : '≥';
+  // Find threshold values from bands
+  let pills = '';
+  kpi.bands.forEach((b, i) => {
+    if (i === kpi.bands.length - 1) return; // skip "Nesplněno" fallback (no condition)
+    // Extract threshold from cond function source
+    const src = b.cond.toString();
+    const m = src.match(/[<>=]+\s*([\d.]+)/);
+    const thr = m ? m[1] : '?';
+    let cls = 'green';
+    if (b.label === 'Částečně') cls = 'amber';
+    pills += `<span class="thr-pill ${cls}">${b.label} ${op} ${thr}${kpi.id.includes('scrap')||kpi.target<10?' %':' %'}</span>`;
+  });
+  pills += '<span class="thr-pill red">Nesplněno · pod tolerancí</span>';
+  return pills;
+}
+
+function buildLegendaHtml() {
+  let html = '<div class="legenda-wrap">';
+
+  // Intro
+  html += `<div class="legenda-intro">
+    <h2>📖 Legenda dashboardu</h2>
+    <p>Detailní vysvětlení všech KPI, výpočtu variabilní složky, RAG pásem, evidence a uživatelských rolí. Tato sekce slouží jako referenční dokumentace pro všechny uživatele dashboardu.</p>
+  </div>`;
+
+  // Section 1: ME KPIs
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#1F3864">
+      <div class="leg-section-icon" style="background:#1F3864">🔧</div>
+      <div>
+        <h3>KPI Manufacturing Engineering</h3>
+        <div class="sec-sub">4 KPI · váha 25 % každé · max VS 16,3 % ze základní mzdy</div>
+      </div>
+    </div>
+    <p>Manufacturing Engineering Manager (David Varhan) odpovídá za výrobní efektivitu, plnění projektových termínů a kvalitu výrobního procesu.</p>
+    <div class="kpi-deep">`;
+
+  DEPTS.me.kpis.forEach((kpi, i) => {
+    const emojis = ['⚙','📅','🗑','⏱'];
+    html += `<div class="kpi-deep-card" style="border-left-color:#1F3864">
+      <div class="kpi-deep-name"><span class="kpi-emoji">${emojis[i]}</span> ${kpi.name}</div>
+      <div class="kpi-deep-sub">${kpi.sub}</div>
+      <div class="kpi-deep-rows">
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Target</span><span class="kpi-deep-value"><strong>${kpi.lb?'≤':'≥'} ${kpi.target} %</strong></span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Min</span><span class="kpi-deep-value">${kpi.lb?'≤':'≥'} ${kpi.min} %</span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Logika</span><span class="kpi-deep-value">${kpi.lb?'Nižší = lepší':'Vyšší = lepší'}</span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Zdroj</span><span class="kpi-deep-value">${kpi.source}</span></div>
+      </div>
+      <div class="kpi-deep-thresholds">${thresholdPills(kpi)}</div>
+    </div>`;
+  });
+  html += '</div></div>';
+
+  // Section 2: LOG KPIs
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#0891B2">
+      <div class="leg-section-icon" style="background:#0891B2">📦</div>
+      <div>
+        <h3>KPI Logistics Manager</h3>
+        <div class="sec-sub">4 KPI · váha 25 % každé · max VS 16,3 % ze základní mzdy</div>
+      </div>
+    </div>
+    <p>Logistics Manager (Milan Lízala) odpovídá za včasné a kompletní dodávky, přesnost skladové evidence, spolehlivost zásobení linek a logistické náklady.</p>
+    <div class="kpi-deep">`;
+
+  DEPTS.log.kpis.forEach((kpi, i) => {
+    const emojis = ['🚚','📊','🔄','💰'];
+    html += `<div class="kpi-deep-card" style="border-left-color:#0891B2">
+      <div class="kpi-deep-name"><span class="kpi-emoji">${emojis[i]}</span> ${kpi.name}</div>
+      <div class="kpi-deep-sub">${kpi.sub}</div>
+      <div class="kpi-deep-rows">
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Target</span><span class="kpi-deep-value"><strong>${kpi.lb?'≤':'≥'} ${kpi.target} %</strong></span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Min</span><span class="kpi-deep-value">${kpi.lb?'≤':'≥'} ${kpi.min} %</span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Logika</span><span class="kpi-deep-value">${kpi.lb?'Nižší = lepší':'Vyšší = lepší'}</span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Zdroj</span><span class="kpi-deep-value">${kpi.source}</span></div>
+      </div>
+      <div class="kpi-deep-thresholds">${thresholdPills(kpi)}</div>
+    </div>`;
+  });
+  html += '</div></div>';
+
+  // Section 3: PROD KPIs
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#7C3AED">
+      <div class="leg-section-icon" style="background:#7C3AED">🏭</div>
+      <div>
+        <h3>KPI Production Manager</h3>
+        <div class="sec-sub">4 KPI · váha 25 % každé · max VS 16,3 % ze základní mzdy</div>
+      </div>
+    </div>
+    <p>Production Manager odpovídá za plnění výrobního plánu, kvalitu výroby (řízení reklamací), stabilitu týmu a pořádek na pracovišti.</p>
+    <div class="kpi-deep">`;
+
+  DEPTS.prod.kpis.forEach((kpi, i) => {
+    const emojis = ['📋','📞','👥','🧹'];
+    const unit = kpi.id === 'prod2' ? ' ks' : ' %';
+    html += `<div class="kpi-deep-card" style="border-left-color:#7C3AED">
+      <div class="kpi-deep-name"><span class="kpi-emoji">${emojis[i]}</span> ${kpi.name}</div>
+      <div class="kpi-deep-sub">${kpi.sub}</div>
+      <div class="kpi-deep-rows">
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Target</span><span class="kpi-deep-value"><strong>${kpi.lb?'≤':'≥'} ${kpi.target}${unit}</strong></span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Min</span><span class="kpi-deep-value">${kpi.lb?'≤':'≥'} ${kpi.min}${unit}</span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Logika</span><span class="kpi-deep-value">${kpi.lb?'Nižší = lepší':'Vyšší = lepší'}</span></div>
+        <div class="kpi-deep-row"><span class="kpi-deep-label">Zdroj</span><span class="kpi-deep-value">${kpi.source}</span></div>
+      </div>
+      <div class="kpi-deep-thresholds">${thresholdPills(kpi)}</div>
+    </div>`;
+  });
+  html += '</div></div>';
+
+  // Section 4: Výpočet variabilní složky
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#00875A">
+      <div class="leg-section-icon" style="background:#00875A">💰</div>
+      <div>
+        <h3>Výpočet variabilní složky</h3>
+        <div class="sec-sub">Jak se z hodnot KPI vypočítává bonus manažera</div>
+      </div>
+    </div>
+    <p>Každé KPI má váhu 25 % a transformuje se do <strong>% bonusu pásma</strong> podle dosaženého výsledku (RAG legenda níže). Součet ze všech 4 KPI dává celkové plnění bonusu, které je vynásobeno maximální variabilní složkou.</p>
+    <div class="leg-formula">
+      <div class="formula-box">Váha KPI (25 %)</div>
+      <span class="formula-op">×</span>
+      <div class="formula-box">% bonusu pásma</div>
+      <span class="formula-op">=</span>
+      <div class="formula-result">Příspěvek</div>
+    </div>
+    <div class="leg-formula">
+      <div class="formula-box">Σ příspěvků všech 4 KPI</div>
+      <span class="formula-op">×</span>
+      <div class="formula-box">Max VS 16,3 %</div>
+      <span class="formula-op">=</span>
+      <div class="formula-result">% ze základní mzdy</div>
+    </div>
+    <p style="margin-top:14px"><strong>Příklad:</strong> Manažer splní všechna 4 KPI v pásmu „Splněno" (každé 100 % bonusu). Příspěvek každého KPI = 25 % × 100 % = 25 %. Celkem 100 % bonusu = <strong>16,3 % ze základní mzdy</strong>.</p>
+  </div>`;
+
+  // Section 5: RAG pásma
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#10B981">
+      <div class="leg-section-icon" style="background:#10B981">🚦</div>
+      <div>
+        <h3>RAG pásma hodnocení</h3>
+        <div class="sec-sub">Pevně definované pásmo pro každé KPI</div>
+      </div>
+    </div>
+    <p>Hodnota každého KPI se zařadí do jednoho ze 4 pásem dle pevně daných hranic (Target a Min). Pásmo určuje, jaké procento bonusu manažer obdrží:</p>
+    <div class="rag-scale">
+      <div class="rag-zone" style="flex:35;background:linear-gradient(90deg,#B91C1C,#DE350B)">
+        <span class="rag-zone-label">🔴 Nesplněno</span>
+        <span class="rag-zone-desc">0 % bonusu</span>
+      </div>
+      <div class="rag-zone" style="flex:25;background:linear-gradient(90deg,#D97706,#FF8B00)">
+        <span class="rag-zone-label">🟡 Částečně</span>
+        <span class="rag-zone-desc">50 % bonusu</span>
+      </div>
+      <div class="rag-zone" style="flex:40;background:linear-gradient(90deg,#00875A,#36B37E)">
+        <span class="rag-zone-label">🟢 Splněno / Výborný</span>
+        <span class="rag-zone-desc">100 % bonusu</span>
+      </div>
+    </div>
+    <div class="rag-axis"><span>Pod tolerancí</span><span>Min</span><span>Target</span><span>100 %+</span></div>
+    <div class="rag-grid" style="margin-top:14px">
+      <div class="rag-card zone-green">
+        <div class="rag-card-head"><span class="rag-icon">🟢</span><span class="rag-card-title">Výborný</span><span class="rag-card-value" style="color:#00875A">100 %</span></div>
+        <div class="rag-card-desc">KPI splňuje plný Target. Ideální stav, není potřeba zásah.</div>
+      </div>
+      <div class="rag-card zone-green">
+        <div class="rag-card-head"><span class="rag-icon">🟢</span><span class="rag-card-title">Splněno</span><span class="rag-card-value" style="color:#36B37E">100 %</span></div>
+        <div class="rag-card-desc">Hodnota mezi Min a Target — plný bonus, ale prostor pro zlepšení.</div>
+      </div>
+      <div class="rag-card zone-amber">
+        <div class="rag-card-head"><span class="rag-icon">🟡</span><span class="rag-card-title">Částečně</span><span class="rag-card-value" style="color:#FF8B00">50 %</span></div>
+        <div class="rag-card-desc">Pod Min thresholdem. <strong>Povinný Action Plan</strong> s root cause analýzou.</div>
+      </div>
+      <div class="rag-card zone-red">
+        <div class="rag-card-head"><span class="rag-icon">🔴</span><span class="rag-card-title">Nesplněno</span><span class="rag-card-value" style="color:#DE350B">0 %</span></div>
+        <div class="rag-card-desc">Pod tolerancí — bonus se neuděluje, vyžaduje okamžitý zásah.</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Section 6: Process / Workflow
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#F59E0B">
+      <div class="leg-section-icon" style="background:#F59E0B">⚡</div>
+      <div>
+        <h3>Měsíční workflow</h3>
+        <div class="sec-sub">Jak proces vykazování probíhá</div>
+      </div>
+    </div>
+    <p>Každý měsíc po uzávěrce kalendářního měsíce provede manažer následující kroky:</p>
+    <div class="leg-process">
+      <div class="leg-step">
+        <div class="leg-step-num">1</div>
+        <div class="leg-step-title">Zadání hodnoty</div>
+        <div class="leg-step-desc">Klikne na KPI kartu a vyplní skutečnou hodnotu pro uzavřený měsíc.</div>
+      </div>
+      <div class="leg-step">
+        <div class="leg-step-num">2</div>
+        <div class="leg-step-title">Komentář</div>
+        <div class="leg-step-desc">Doplní krátký komentář (volitelný pro zelené, povinný pro oranžové/červené).</div>
+      </div>
+      <div class="leg-step">
+        <div class="leg-step-num">3</div>
+        <div class="leg-step-title">Evidence</div>
+        <div class="leg-step-desc">Přiloží důkaz správnosti dat — screenshot, URL nebo číslo reportu (<strong>povinné</strong>).</div>
+      </div>
+      <div class="leg-step">
+        <div class="leg-step-num">4</div>
+        <div class="leg-step-title">Action Plan</div>
+        <div class="leg-step-desc">Pokud KPI mimo target — povinný Action Plan: root cause, opatření, owner, termín.</div>
+      </div>
+      <div class="leg-step">
+        <div class="leg-step-num">5</div>
+        <div class="leg-step-title">Uložení</div>
+        <div class="leg-step-desc">Data se okamžitě sync do cloudu (Firebase). Ostatní uživatelé je hned vidí.</div>
+      </div>
+      <div class="leg-step">
+        <div class="leg-step-num">6</div>
+        <div class="leg-step-title">Revize</div>
+        <div class="leg-step-desc">Operations Manager (OM) projde dashboard a poskytne zpětnou vazbu.</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Section 7: Evidence typy
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#5D3FD3">
+      <div class="leg-section-icon" style="background:#5D3FD3">📎</div>
+      <div>
+        <h3>Typy evidence</h3>
+        <div class="sec-sub">Důkaz správnosti zadaných dat</div>
+      </div>
+    </div>
+    <p>Pro každé zadání KPI je povinné přiložit evidenci. Bez evidence zůstane záznam označen jako <strong>⚠ Čeká na verifikaci</strong>:</p>
+    <div class="leg-evidence">
+      <div class="leg-ev-card">
+        <div class="leg-ev-icon">📸</div>
+        <div class="leg-ev-name">Screenshot</div>
+        <div class="leg-ev-desc">Obrázek přímo ze systému (SCADA, MES, ERP, dashboardu). Vhodné pro vizuální data.</div>
+      </div>
+      <div class="leg-ev-card">
+        <div class="leg-ev-icon">🔗</div>
+        <div class="leg-ev-name">URL / odkaz</div>
+        <div class="leg-ev-desc">Přímý odkaz na report v SharePointu, BI nástroji nebo interním systému.</div>
+      </div>
+      <div class="leg-ev-card">
+        <div class="leg-ev-icon">📄</div>
+        <div class="leg-ev-name">Číslo reportu</div>
+        <div class="leg-ev-desc">Referenční číslo reportu / dokumentu pro pozdější dohledání (např. CAPA-2026-042).</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Section 8: Uživatelské role
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#DC2626">
+      <div class="leg-section-icon" style="background:#DC2626">🔐</div>
+      <div>
+        <h3>Uživatelské role &amp; přístupy</h3>
+        <div class="sec-sub">Kdo vidí a edituje co</div>
+      </div>
+    </div>
+    <p>Každý uživatel se přihlašuje vlastním heslem (vytvořeným při prvním přihlášení). Hesla jsou v databázi uložena jako SHA-256 hash. Přístupy jsou omezeny dle role:</p>
+    <div class="leg-roles">
+      <div class="leg-role-card" style="border-left-color:#1F3864">
+        <div class="leg-role-name">🔧 David Varhan</div>
+        <div class="leg-role-access">ME Manager — vidí a edituje pouze Manufacturing Engineering KPI a tasky.</div>
+        <div class="leg-role-tag">role: me</div>
+      </div>
+      <div class="leg-role-card" style="border-left-color:#0891B2">
+        <div class="leg-role-name">📦 Milan Lízala</div>
+        <div class="leg-role-access">Logistics Manager — vidí a edituje pouze Logistics KPI a tasky.</div>
+        <div class="leg-role-tag">role: log</div>
+      </div>
+      <div class="leg-role-card" style="border-left-color:#7C3AED">
+        <div class="leg-role-name">🏭 Production Manager</div>
+        <div class="leg-role-access">Production Manager — vidí a edituje pouze Production KPI a tasky.</div>
+        <div class="leg-role-tag">role: prod</div>
+      </div>
+      <div class="leg-role-card" style="border-left-color:#DC2626">
+        <div class="leg-role-name">👔 Milan Hanus</div>
+        <div class="leg-role-access">Operations Manager — admin přístup, vidí všechny 3 záložky + možnost resetu hesla.</div>
+        <div class="leg-role-tag">role: om (admin)</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Section 9: People Development
+  html += `<div class="legenda-section">
+    <div class="leg-section-head" style="--sec-color:#5D3FD3">
+      <div class="leg-section-icon" style="background:#5D3FD3">👥</div>
+      <div>
+        <h3>People Development</h3>
+        <div class="sec-sub">3 metriky · informativní · bez vlivu na bonus</div>
+      </div>
+    </div>
+    <p>Pod KPI sekcí je samostatný panel People Development. Tyto metriky neovlivňují variabilní složku, ale slouží pro sledování rozvoje týmu:</p>
+    <div class="kpi-deep">
+      <div class="kpi-deep-card" style="border-left-color:#5D3FD3">
+        <div class="kpi-deep-name"><span class="kpi-emoji">📅</span> Manager 1:1 frequency</div>
+        <div class="kpi-deep-sub">Vážený poměr 1:1 schůzek (70 % direct + 30 % skip-level)</div>
+        <div class="kpi-deep-rows">
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Cíl</span><span class="kpi-deep-value"><strong>≥ 75 %</strong></span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Vstupy</span><span class="kpi-deep-value">Direct: počet + provedené · Skip-level: počet + provedené</span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Vzorec</span><span class="kpi-deep-value">(direct % × 0,7) + (skip % × 0,3)</span></div>
+        </div>
+      </div>
+      <div class="kpi-deep-card" style="border-left-color:#5D3FD3">
+        <div class="kpi-deep-name"><span class="kpi-emoji">📋</span> IDP Coverage</div>
+        <div class="kpi-deep-sub">% týmu s aktivním Individual Development Planem</div>
+        <div class="kpi-deep-rows">
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Cíl</span><span class="kpi-deep-value"><strong>≥ 80 %</strong></span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Vstupy</span><span class="kpi-deep-value">Celkem lidí v týmu · Počet s aktivním IDP</span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Vzorec</span><span class="kpi-deep-value">(IDP aktivní / celkem) × 100</span></div>
+        </div>
+      </div>
+      <div class="kpi-deep-card" style="border-left-color:#5D3FD3">
+        <div class="kpi-deep-name"><span class="kpi-emoji">🔀</span> Cross-training Matrix</div>
+        <div class="kpi-deep-sub">% klíčových pozic s min. 2 zastupiteli</div>
+        <div class="kpi-deep-rows">
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Cíl</span><span class="kpi-deep-value"><strong>≥ 70 %</strong></span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Vstupy</span><span class="kpi-deep-value">Klíčové pozice · Pozice s ≥2 zastupiteli</span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Vzorec</span><span class="kpi-deep-value">(pokryté / celkem) × 100</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  html += '</div>'; // legenda-wrap
+  return html;
+}
+
+
+// ─── AUTH / LOGIN ─────────────────────────────────────────────────────────────
+// Users — passwords are NOT stored in code; they are created by users on first login
+// and stored as SHA-256 hashes in Firebase under /users/{username}/passwordHash
+const USERS = {
+  "David Varhan":       { role: "me",   label: "David Varhan (ME Manager)" },
+  "Milan Lízala":       { role: "log",  label: "Milan Lízala (Logistics Manager)" },
+  "Production Manager": { role: "prod", label: "Production Manager" },
+  "Milan Hanus":        { role: "om",   label: "Milan Hanus (Operation Manager)" },
+};
+
+// SHA-256 hash helper (browser native)
+async function sha256(text) {
+  const buf = new TextEncoder().encode(text);
+  const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function fetchUserHash(userName) {
+  try {
+    const snap = await db.ref('users/' + userName.replace(/[.#$/\[\]]/g, '_') + '/passwordHash').once('value');
+    return snap.val();
+  } catch (e) {
+    console.error('Fetch user hash error:', e);
+    return null;
+  }
+}
+
+async function saveUserHash(userName, hash) {
+  try {
+    await db.ref('users/' + userName.replace(/[.#$/\[\]]/g, '_') + '/passwordHash').set(hash);
+    return true;
+  } catch (e) {
+    console.error('Save user hash error:', e);
+    return false;
+  }
+}
+
+async function resetUserPassword(userName) {
+  try {
+    await db.ref('users/' + userName.replace(/[.#$/\[\]]/g, '_') + '/passwordHash').remove();
+    return true;
+  } catch (e) {
+    console.error('Reset password error:', e);
+    return false;
+  }
+}
+
+// Which dept tabs each role can see
+const ROLE_ACCESS = {
+  "me":   ["me"],
+  "log":  ["log"],
+  "prod": ["prod"],
+  "om":   ["me", "log", "prod"],
+};
+
+async function doLogin() {
+  const userSel = document.getElementById('login-user').value;
+  const pw = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  err.classList.remove('show');
+
+  if (!userSel) { err.textContent = 'Vyberte uživatele.'; err.classList.add('show'); return; }
+  if (!pw) { err.textContent = 'Zadejte heslo.'; err.classList.add('show'); return; }
+  if (!USERS[userSel]) { err.textContent = 'Neznámý uživatel.'; err.classList.add('show'); return; }
+
+  // Check Firebase if this user already has a password set
+  const storedHash = await fetchUserHash(userSel);
+  if (!storedHash) {
+    // First login — show registration form
+    showRegister(userSel);
+    return;
+  }
+
+  // Verify password
+  const enteredHash = await sha256(pw);
+  if (enteredHash !== storedHash) {
+    err.textContent = 'Nesprávné heslo.';
+    err.classList.add('show');
+    return;
+  }
+
+  try { localStorage.setItem('kpi_dash_logged_user', userSel); } catch {}
+  applyLoggedInUser(userSel);
+}
+
+// Show "create password" form for first-time users
+function showRegister(userName) {
+  const card = document.querySelector('#login-overlay .login-card');
+  if (!card) return;
+  card.innerHTML = `
+    <div class="login-logo">
+      <h1>🔐 První přihlášení</h1>
+      <p>${USERS[userName].label}</p>
+    </div>
+    <div class="login-error" id="login-error">Hesla se neshodují</div>
+    <div style="background:#EBF5FB;border:1px solid #AED6F1;border-radius:8px;padding:10px 14px;font-size:12px;color:#1B4F72;margin-bottom:16px">
+      ℹ Tento účet ještě nemá heslo. Nastav si vlastní heslo pro budoucí přihlašování.
+    </div>
+    <div class="login-field">
+      <label class="login-label">Nové heslo (min. 6 znaků)</label>
+      <input class="login-input" type="password" id="reg-pw1" placeholder="Nové heslo">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Heslo znovu pro ověření</label>
+      <input class="login-input" type="password" id="reg-pw2" placeholder="Heslo znovu">
+    </div>
+    <button class="login-btn" onclick="completeRegistration('${userName.replace(/'/g, "\\'")}')">Vytvořit heslo a přihlásit</button>
+    <button class="login-btn" style="background:transparent;color:var(--mid);border:1px solid var(--mid);margin-top:8px" onclick="location.reload()">Zpět</button>
+  `;
+  setTimeout(() => { const el = document.getElementById('reg-pw1'); if (el) el.focus(); }, 50);
+}
+
+async function completeRegistration(userName) {
+  const pw1 = document.getElementById('reg-pw1').value;
+  const pw2 = document.getElementById('reg-pw2').value;
+  const err = document.getElementById('login-error');
+  err.classList.remove('show');
+
+  if (!pw1 || pw1.length < 6) { err.textContent = 'Heslo musí mít alespoň 6 znaků.'; err.classList.add('show'); return; }
+  if (pw1 !== pw2) { err.textContent = 'Hesla se neshodují.'; err.classList.add('show'); return; }
+
+  const hash = await sha256(pw1);
+  const ok = await saveUserHash(userName, hash);
+  if (!ok) { err.textContent = 'Chyba při ukládání hesla. Zkuste znovu.'; err.classList.add('show'); return; }
+
+  try { localStorage.setItem('kpi_dash_logged_user', userName); } catch {}
+  applyLoggedInUser(userName);
+}
+
+async function adminResetPassword() {
+  const names = Object.keys(USERS);
+  const choice = prompt('Reset hesla — komu? Napiš jméno přesně.\n\n' + names.map((n,i) => (i+1) + '. ' + n).join('\n'));
+  if (!choice) return;
+  const target = names.find(n => n.toLowerCase() === choice.toLowerCase().trim());
+  if (!target) { alert('Uživatel nenalezen.'); return; }
+  if (!confirm('Opravdu resetovat heslo pro: ' + target + ' ?\nPři příštím přihlášení si nastaví nové heslo.')) return;
+  const ok = await resetUserPassword(target);
+  alert(ok ? 'Heslo pro ' + target + ' bylo resetováno.' : 'Chyba při resetu.');
+}
+
+function applyLoggedInUser(userName) {
+  const u = USERS[userName];
+  if (!u) { doLogout(); return; }
+
+  // Hide login, show dashboard
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('user-select').value = userName;
+  document.getElementById('current-user-badge').textContent = '👤 ' + u.label;
+
+  // Show admin reset button only for OM role
+  const adminBtn = document.getElementById('admin-reset-btn');
+  if (adminBtn) adminBtn.style.display = u.role === 'om' ? '' : 'none';
+
+  // Tab access — show only allowed tabs (Legenda is always visible for everyone)
+  const accessibleDepts = ROLE_ACCESS[u.role];
+  const tabs = document.querySelectorAll('.tab');
+  const slides = document.querySelectorAll('.sl');
+  const deptIds = ['me', 'log', 'prod', 'legenda']; // legenda always allowed
+
+  tabs.forEach((tab, i) => {
+    if (deptIds[i] === 'legenda' || accessibleDepts.includes(deptIds[i])) {
+      tab.style.display = '';
+    } else {
+      tab.style.display = 'none';
+      tab.classList.remove('active');
+    }
+  });
+
+  slides.forEach((sl, i) => {
+    if (deptIds[i] !== 'legenda' && !accessibleDepts.includes(deptIds[i])) {
+      sl.classList.remove('on');
+    }
+  });
+
+  // Activate the first allowed tab
+  const firstAllowedIdx = deptIds.findIndex(d => accessibleDepts.includes(d));
+  if (firstAllowedIdx !== -1) {
+    tabs.forEach(t => t.classList.remove('active'));
+    slides.forEach(s => s.classList.remove('on'));
+    tabs[firstAllowedIdx].classList.add('active');
+    slides[firstAllowedIdx].classList.add('on');
+    setTimeout(() => buildCharts(deptIds[firstAllowedIdx]), 60);
+  }
+}
+
+function doLogout() {
+  try { localStorage.removeItem('kpi_dash_logged_user'); } catch {}
+  location.reload();
+}
+
+// Auto-login if we have a stored user
+function tryAutoLogin() {
+  try {
+    const saved = localStorage.getItem('kpi_dash_logged_user');
+    if (saved && USERS[saved]) {
+      applyLoggedInUser(saved);
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+// Allow Enter key on password
+document.addEventListener('DOMContentLoaded', () => {
+  const pw = document.getElementById('login-password');
+  if (pw) pw.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+});
+
+
+// Initialize dataDict from initial hardcoded arrays (treated as last 6 closed months)
+Object.keys(DEPTS).forEach(deptId => {
+  DEPTS[deptId].kpis.forEach(kpi => {
+    if (!kpi.dataDict) {
+      kpi.dataDict = {};
+      MONTH_KEYS.forEach((k, i) => { kpi.dataDict[k] = kpi.data[i]; });
+    }
+  });
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+// Update header badges (last closed month + current datetime)
+function updateHeaderClock() {
+  const now = new Date();
+  const fullNames = ['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+
+  // Last closed month
+  const lastClosed = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const monthEl = document.getElementById('hdr-month');
+  if (monthEl) monthEl.textContent = '📅 Poslední uzavřený: ' + fullNames[lastClosed.getMonth()] + ' ' + lastClosed.getFullYear();
+
+  // Current date & time
+  const nowEl = document.getElementById('hdr-now');
+  if (nowEl) {
+    const dStr = now.toLocaleDateString('cs-CZ', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const tStr = now.toLocaleTimeString('cs-CZ', { hour:'2-digit', minute:'2-digit' });
+    nowEl.textContent = '🕒 ' + dStr + ' ' + tStr;
+  }
+}
+updateHeaderClock();
+setInterval(updateHeaderClock, 30000); // refresh every 30 s
+// Render once with empty data, Firebase sync will update
+renderDept('me','s0');
+renderDept('log','s1');
+renderDept('prod','s2');
+setTimeout(()=>buildCharts('me'),100);
+updatePendingBadge();
+// Try auto-login from saved session
+tryAutoLogin();
+// (user-select listener removed — handled by auth system)
+
+// Start Firebase real-time sync
+setupFirebaseSync();
+</script>
+</body>
+</html>
