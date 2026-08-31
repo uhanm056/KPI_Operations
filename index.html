@@ -480,7 +480,7 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
   <div class="login-card">
     <div class="login-logo">
       <h1>🔐 KPI Dashboard</h1>
-      <p>Manufacturing Engineering · Logistics · Production</p>
+      <p>ME · Logistics · Production · Quality · CI · Finance</p>
     </div>
     <div class="login-error" id="login-error">Nesprávné heslo nebo uživatel</div>
     <div class="login-field">
@@ -490,6 +490,9 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
         <option value="David Varhan">David Varhan (ME Manager)</option>
         <option value="Milan Lízala">Milan Lízala (Logistics Manager)</option>
         <option value="Production Manager">Production Manager</option>
+        <option value="Quality Manager">Quality Manager</option>
+        <option value="CI Manager">CI Manager (Continuous Improvement)</option>
+        <option value="Finance Manager">Finance Manager</option>
         <option value="Milan Hanus">Milan Hanus (Operation Manager)</option>
       </select>
     </div>
@@ -506,8 +509,8 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
 
 <div class="header">
   <div class="header-left">
-    <h1>KPI Dashboard — Manufacturing Engineering &amp; Logistics</h1>
-    <div class="sub">Váha KPI: 25 % každé · Sledování celý kalendářní rok</div>
+    <h1>KPI Dashboard — Operations</h1>
+    <div class="sub">6 oddělení · 4 KPI po 25 % · Sledování celý kalendářní rok</div>
   </div>
   <div class="header-right">
     <span class="badge" id="hdr-month" title="Poslední uzavřený měsíc"></span>
@@ -526,7 +529,10 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
     <button class="tab active" onclick="go(0,this)">Manufacturing Engineering</button>
     <button class="tab" onclick="go(1,this)">Logistics Manager</button>
     <button class="tab" onclick="go(2,this)">Production Manager</button>
-    <button class="tab" onclick="go(3,this)" style="background:linear-gradient(135deg,#5D3FD3,#7A5CE0);color:white">📖 Legenda</button>
+    <button class="tab" onclick="go(3,this)">Quality Manager</button>
+    <button class="tab" onclick="go(4,this)">Continuous Improvement</button>
+    <button class="tab" onclick="go(5,this)">Finance Manager</button>
+    <button class="tab" onclick="go(6,this)" style="background:linear-gradient(135deg,#5D3FD3,#7A5CE0);color:white">📖 Legenda</button>
   </div>
   <div class="tab-actions">
     <button class="btn" onclick="showHistory()">📋 Historie zadání</button>
@@ -539,6 +545,9 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
   <div class="sl" id="s1"></div>
   <div class="sl" id="s2"></div>
   <div class="sl" id="s3"></div>
+  <div class="sl" id="s4"></div>
+  <div class="sl" id="s5"></div>
+  <div class="sl" id="s6"></div>
 </div>
 
 <!-- HISTORY MODAL -->
@@ -656,7 +665,7 @@ const DEPTS = {
         source:'ERP (SAP) – výrobní příkazy vs. plán', systemSource:'ERP (SAP) – výrobní příkazy',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
       { id:'prod2', name:'Recurring Complaints', sub:'Opakované reklamace (stejná root cause / 12 měsíců)', color:'red',
-        target:0, min:2, lb:true, weight:25,
+        target:0, min:2, lb:true, weight:25, unit:'ks',
         bands:[{label:'Výborný',pct:100,cond:v=>v<=0},{label:'Splněno',pct:100,cond:v=>v<=1},{label:'Částečně',pct:50,cond:v=>v<=2},{label:'Nesplněno',pct:0,cond:()=>true}],
         source:'Quality systém – CAPA / 8D reporty', systemSource:'Quality / CAPA tracker',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
@@ -671,8 +680,132 @@ const DEPTS = {
         source:'5S audit protokol – interní auditor', systemSource:'5S audit protokol (interní)',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
     ]
+  },
+  qua: {
+    label: 'Quality Manager', varPct: 0.163,
+    kpis: [
+      { id:'qua1', name:'Customer PPM', sub:'Vadné díly na milion dodaných kusů (zákaznické reklamace)', color:'red',
+        target:10, min:50, lb:true, weight:25, unit:'ppm',
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=10},{label:'Splněno',pct:100,cond:v=>v<=25},{label:'Částečně',pct:50,cond:v=>v<=50},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Zákaznické portály + evidence reklamací', systemSource:'Zákaznický portál – PPM report',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'qua2', name:'8D On-Time Response', sub:'Reklamace uzavřené 8D reportem v termínu zákazníka', color:'blue',
+        target:95, min:85, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=85},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Quality systém – CAPA / 8D tracker', systemSource:'CAPA / 8D tracker – termín vs. odeslání',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'qua3', name:'Cost of Poor Quality (COPQ)', sub:'Náklady na nekvalitu jako % z obratu plantu', color:'amber',
+        target:0.5, min:1, lb:true, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=0.5},{label:'Splněno',pct:100,cond:v=>v<=0.75},{label:'Částečně',pct:50,cond:v=>v<=1},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Controlling – COPQ report (scrap, třídění, claimy, dobropisy)', systemSource:'Controlling – COPQ report',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'qua4', name:'Layered Process Audit (LPA)', sub:'Plnění plánu vrstvených procesních auditů', color:'green',
+        target:95, min:85, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=85},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'LPA plán vs. provedené audity', systemSource:'LPA tracker (interní)',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+    ]
+  },
+  ci: {
+    label: 'Continuous Improvement', varPct: 0.163,
+    kpis: [
+      { id:'ci1', name:'Realizované úspory', sub:'Controllingem ověřené úspory z CI projektů (€/měsíc)', color:'green',
+        target:20000, min:10000, lb:false, weight:25, unit:'€',
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=20000},{label:'Splněno',pct:100,cond:v=>v>=15000},{label:'Částečně',pct:50,cond:v=>v>=10000},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Controlling – savings tracker (validované úspory)', systemSource:'Savings tracker – validace controllingem',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'ci2', name:'Implementované zlepšovací návrhy', sub:'Počet realizovaných návrhů za měsíc', color:'blue',
+        target:10, min:4, lb:false, weight:25, unit:'ks',
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=10},{label:'Splněno',pct:100,cond:v=>v>=7},{label:'Částečně',pct:50,cond:v=>v>=4},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Databáze zlepšovacích návrhů (Kaizen / CIP)', systemSource:'Kaizen / CIP databáze',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'ci3', name:'Plnění plánu CI projektů', sub:'Milníky CI projektů splněné v termínu', color:'amber',
+        target:90, min:70, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Splněno',pct:100,cond:v=>v>=80},{label:'Částečně',pct:50,cond:v=>v>=70},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'CI project tracker – milníky vs. plán', systemSource:'CI project tracker',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'ci4', name:'Zapojení zaměstnanců do CI', sub:'% zaměstnanců s min. 1 podaným návrhem (rolling 12 M)', color:'purple',
+        target:30, min:15, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=30},{label:'Splněno',pct:100,cond:v=>v>=20},{label:'Částečně',pct:50,cond:v=>v>=15},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Kaizen databáze + stav zaměstnanců z HR', systemSource:'Kaizen databáze / HR headcount',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+    ]
+  },
+  fin: {
+    label: 'Finance Manager', varPct: 0.163,
+    kpis: [
+      { id:'fin1', name:'Plnění rozpočtu (Budget Adherence)', sub:'Odchylka skutečných nákladů od schváleného rozpočtu', color:'blue',
+        target:2, min:5, lb:true, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=2},{label:'Splněno',pct:100,cond:v=>v<=3.5},{label:'Částečně',pct:50,cond:v=>v<=5},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Controlling – actual vs. budget (měsíční report)', systemSource:'SAP / Controlling – budget report',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'fin2', name:'Měsíční uzávěrka v termínu', sub:'Počet pracovních dnů do uzavření měsíce', color:'green',
+        target:3, min:5, lb:true, weight:25, unit:'dní',
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=3},{label:'Splněno',pct:100,cond:v=>v<=4},{label:'Částečně',pct:50,cond:v=>v<=5},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Closing kalendář – datum uzavření vs. konec měsíce', systemSource:'SAP – closing log',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'fin3', name:'Přesnost forecastu', sub:'Shoda forecastu se skutečným výsledkem měsíce', color:'amber',
+        target:95, min:90, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=92},{label:'Částečně',pct:50,cond:v=>v>=90},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Controlling – forecast vs. actual', systemSource:'Controlling – forecast accuracy report',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'fin4', name:'Pohledávky po splatnosti', sub:'% pohledávek po splatnosti z celkových pohledávek', color:'red',
+        target:2, min:5, lb:true, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=2},{label:'Splněno',pct:100,cond:v=>v<=3.5},{label:'Částečně',pct:50,cond:v=>v<=5},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Controlling – AR aging report', systemSource:'SAP – AR aging report',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+    ]
   }
 };
+
+// ─── DEPT ORDER & METADATA ───────────────────────────────────────────────────
+// Tab index === slide index === position in DEPT_ORDER. The Legenda tab always
+// sits right after the last department.
+const DEPT_ORDER = ['me', 'log', 'prod', 'qua', 'ci', 'fin'];
+const LEGENDA_IDX = DEPT_ORDER.length;
+function slideOf(deptId) {
+  const i = DEPT_ORDER.indexOf(deptId);
+  return 's' + (i < 0 ? 0 : i);
+}
+
+const DEPT_META = {
+  me:   { color:'#1F3864', icon:'🔧', emojis:['⚙','📅','🗑','⏱'],
+          desc:'Manufacturing Engineering Manager (David Varhan) odpovídá za výrobní efektivitu, plnění projektových termínů a kvalitu výrobního procesu.' },
+  log:  { color:'#0891B2', icon:'📦', emojis:['🚚','📊','🔄','💰'],
+          desc:'Logistics Manager (Milan Lízala) odpovídá za včasné a kompletní dodávky, přesnost skladové evidence, pořádek v logistice a logistické náklady.' },
+  prod: { color:'#7C3AED', icon:'🏭', emojis:['📋','📞','👥','🧹'],
+          desc:'Production Manager odpovídá za plnění výrobního plánu, kvalitu výroby (řízení reklamací), stabilitu týmu a pořádek na pracovišti.' },
+  qua:  { color:'#C0392B', icon:'🔍', emojis:['🎯','📄','💸','🕵'],
+          desc:'Quality Manager odpovídá za kvalitu dodávek k zákazníkovi, včasné řešení reklamací, náklady na nekvalitu a auditní disciplínu.' },
+  ci:   { color:'#00875A', icon:'💡', emojis:['💶','🛠','📈','🤝'],
+          desc:'Continuous Improvement Manager odpovídá za realizované úspory, tok zlepšovacích návrhů, plnění CI projektů a zapojení zaměstnanců.' },
+  fin:  { color:'#B7791F', icon:'📈', emojis:['🧾','🗓','🔮','⏳'],
+          desc:'Finance Manager odpovídá za plnění rozpočtu, včasnou měsíční uzávěrku, přesnost forecastu a inkaso pohledávek.' },
+};
+
+// Role → how it is described in the Legenda
+const ROLE_LEGEND = {
+  me:   { emoji:'🔧', text:'ME Manager — vidí a edituje pouze Manufacturing Engineering KPI a tasky.' },
+  log:  { emoji:'📦', text:'Logistics Manager — vidí a edituje pouze Logistics KPI a tasky.' },
+  prod: { emoji:'🏭', text:'Production Manager — vidí a edituje pouze Production KPI a tasky.' },
+  qua:  { emoji:'🔍', text:'Quality Manager — vidí a edituje pouze Quality KPI a tasky.' },
+  ci:   { emoji:'💡', text:'CI Manager — vidí a edituje pouze Continuous Improvement KPI a tasky.' },
+  fin:  { emoji:'📈', text:'Finance Manager — vidí a edituje pouze Finance KPI a tasky.' },
+  om:   { emoji:'👔', text:'Operations Manager — admin přístup, vidí všech 6 oddělení + možnost resetu hesla.' },
+};
+
+// ─── UNIT HELPERS ────────────────────────────────────────────────────────────
+// Every KPI carries an optional `unit` ('€', 'ks', 'ppm', 'dní'); '%' is default.
+function kpiUnit(kpi) { return (kpi && kpi.unit) ? kpi.unit : '%'; }
+function uSuffix(kpi) { return ' ' + kpiUnit(kpi); }
+function fmtUnitVal(v, kpi) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const u = kpiUnit(kpi);
+  if (u === '€')   return Math.round(v).toLocaleString('cs-CZ') + ' €';
+  if (u === 'ks' || u === 'ppm') return Math.round(v) + ' ' + u;
+  if (u === 'dní') return (Number.isInteger(v) ? v : v.toFixed(1)) + ' dní';
+  return (v < 10 ? v.toFixed(2) : v.toFixed(1)) + ' %';
+}
 
 const CCOL = { blue:'#2E6DA4', green:'#27AE60', red:'#C0392B', amber:'#F39C12', purple:'#8E44AD' };
 const charts = {};
@@ -803,13 +936,11 @@ function setupFirebaseSync() {
       });
     });
     // Re-render all depts
-    renderDept('me','s0');
-    renderDept('log','s1');
-    renderDept('prod','s2');
+    DEPT_ORDER.forEach(d => renderDept(d, slideOf(d)));
     // Rebuild charts only for active tab
     const activeTab = document.querySelector('.tab.active');
     const idx = activeTab ? Array.from(document.querySelectorAll('.tab')).indexOf(activeTab) : 0;
-    const deptId = idx === 0 ? 'me' : idx === 1 ? 'log' : 'prod';
+    const deptId = DEPT_ORDER[idx] || DEPT_ORDER[0];
     setTimeout(() => buildCharts(deptId), 60);
     updatePendingBadge();
     updateSyncStatus(true);
@@ -854,24 +985,15 @@ const MB = { green:'mb-g', amber:'mb-a', red:'mb-r', gray:'mb-n' };
 const DC = { green:'dg', amber:'da', red:'dr', gray:'dgr' };
 const VC = { green:'cv-green', amber:'cv-amber', red:'cv-red', gray:'' };
 function fmtVal(v, kpi) {
-  if (v===null||v===undefined||isNaN(v)) return '—';
-  // Custom unit per KPI
-  if (kpi && kpi.unit === '€') {
-    return Math.round(v).toLocaleString('cs-CZ') + ' €';
-  }
-  if (kpi && kpi.id === 'prod2') {
-    return Math.round(v) + ' ks';
-  }
-  return (v<10?v.toFixed(2):v.toFixed(1)) + ' %';
+  return fmtUnitVal(v, kpi);
 }
 function ytd(data, kpi) {
   const lastIdx = lastClosedMonthIdx();
   const v = data.slice(0, lastIdx + 1).filter(x => x !== null && !isNaN(x));
   if (!v.length) return '—';
   const avg = v.reduce((a,b) => a+b, 0)/v.length;
-  if (kpi && kpi.unit === '€') return Math.round(avg).toLocaleString('cs-CZ') + ' €';
-  if (kpi && kpi.id === 'prod2') return avg.toFixed(1) + ' ks';
-  return avg.toFixed(1) + ' %';
+  if (kpiUnit(kpi) === '€') return Math.round(avg).toLocaleString('cs-CZ') + ' €';
+  return avg.toFixed(1) + uSuffix(kpi);
 }
 function trendTxt(data, lb) {
   const v=data.filter(x=>x!==null&&!isNaN(x));
@@ -1332,8 +1454,9 @@ async function savePDForm(deptId, metricId) {
 // Tasks are stored in Firebase under store.tasks (dict keyed by id)
 // Each task: { id, deptId, title, desc, owner, dueDate, priority, status, createdAt, createdBy, updatedAt, updatedBy }
 
-const TASK_FILTERS = { me: 'all', log: 'all', prod: 'all' };
-const TASK_PROJECT_FILTERS = { me: '', log: '', prod: '' };
+const TASK_FILTERS = {};
+const TASK_PROJECT_FILTERS = {};
+DEPT_ORDER.forEach(d => { TASK_FILTERS[d] = 'all'; TASK_PROJECT_FILTERS[d] = ''; });
 
 function getDeptTasks(deptId) {
   const s = loadStore();
@@ -1459,14 +1582,14 @@ function renderTasksPanel(deptId) {
 
 function setTaskFilter(deptId, filter) {
   TASK_FILTERS[deptId] = filter;
-  const slideId = deptId === 'me' ? 's0' : (deptId === 'log' ? 's1' : 's2');
+  const slideId = slideOf(deptId);
   renderDept(deptId, slideId);
   setTimeout(() => buildCharts(deptId), 60);
 }
 
 function setTaskProjectFilter(deptId, project) {
   TASK_PROJECT_FILTERS[deptId] = project;
-  const slideId = deptId === 'me' ? 's0' : (deptId === 'log' ? 's1' : 's2');
+  const slideId = slideOf(deptId);
   renderDept(deptId, slideId);
   setTimeout(() => buildCharts(deptId), 60);
 }
@@ -1621,7 +1744,7 @@ function renderDept(deptId, slideId) {
     const dStr = d.toLocaleDateString('cs') + ' ' + d.toLocaleTimeString('cs',{hour:'2-digit',minute:'2-digit'});
     const kpiObj = dept.kpis.find(k => k.id === lastEntry.kpiId);
     const kpiName = kpiObj ? kpiObj.name : lastEntry.kpiId;
-    lastUpdateBar = `<div class="update-bar"><span class="update-icon">🕒</span> Poslední aktualizace: <strong>${lastEntry.editedBy || 'Neznámý uživatel'}</strong> — ${kpiName} → ${lastEntry.value!==null&&lastEntry.value!==undefined?(lastEntry.value.toFixed(lastEntry.value<10?2:1)+(lastEntry.kpiId==='log4'?' €':lastEntry.kpiId==='prod2'?' ks':' %')):'—'} <span class="update-time">· ${dStr}</span></div>`;
+    lastUpdateBar = `<div class="update-bar"><span class="update-icon">🕒</span> Poslední aktualizace: <strong>${lastEntry.editedBy || 'Neznámý uživatel'}</strong> — ${kpiName} → ${fmtUnitVal(lastEntry.value, kpiObj)} <span class="update-time">· ${dStr}</span></div>`;
   } else {
     lastUpdateBar = `<div class="update-bar update-bar-empty"><span class="update-icon">⏳</span> Žádná data nebyla zatím zadána pro ${dept.label}</div>`;
   }
@@ -1645,7 +1768,7 @@ function renderDept(deptId, slideId) {
       <div class="kpi-value ${VC[s]}" id="val-${kpi.id}">${fmtVal(cur, kpi)}</div>
       <div class="kpi-sub">
         <span class="mini-badge ${displayStatus==='pending'?'mb-pending':MB[s]}" id="badge-${kpi.id}">${displayStatus==='pending'?'⚠ Čeká na verifikaci':SL[s]}</span>
-        &nbsp;Target ${kpi.lb?'≤':'≥'} ${kpi.target}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'}
+        &nbsp;Target ${kpi.lb?'≤':'≥'} ${kpi.target}${uSuffix(kpi)}
       </div>
       <div class="kpi-hint" id="tr-${kpi.id}">${trendTxt(kpi.data,kpi.lb)} · YTD ø ${ytd(kpi.data, kpi)}</div>
     </div>`;
@@ -1681,8 +1804,8 @@ function renderDept(deptId, slideId) {
       <td class="ov-num c">${i+1}</td>
       <td><strong>${kpi.name}</strong><span class="pill">${kpi.weight} %</span>${apStatus}<br><span style="font-size:11px;color:var(--muted)">${kpi.sub}</span></td>
       <td class="c" id="rv-${kpi.id}" style="font-weight:700">${fmtVal(cur, kpi)}</td>
-      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.target}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'}</td>
-      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.min}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'}</td>
+      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.target}${uSuffix(kpi)}</td>
+      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.min}${uSuffix(kpi)}</td>
       <td class="c" id="ytd-ov-${kpi.id}">${ytd(kpi.data, kpi)}</td>
       <td class="c" id="band-${kpi.id}"><strong>${band.label}</strong><br><span style="font-size:10px;color:var(--muted)">${band.pct} % bonusu</span></td>
       <td class="c" id="ev-${kpi.id}">${evStatus}</td>
@@ -1890,7 +2013,7 @@ function formTLHtml(band, val, kpi) {
   const lits = ['lit-g','lit-lg','lit-a','lit-r'];
   const dcls = ['tl-dot-g','tl-dot-lg','tl-dot-a','tl-dot-r'];
   let dots = lights.map((on,i)=>`<div class="form-tl-dot ${dcls[i]} ${on?lits[i]:''}" ></div>`).join('');
-  const valStr = (val===null||isNaN(val)) ? '—' : (kpi.unit==='€' ? Math.round(val).toLocaleString('cs-CZ')+' €' : (kpi.id==='prod2' ? Math.round(val)+' ks' : (val<10?val.toFixed(2):val.toFixed(1))+' %'));
+  const valStr = fmtUnitVal(val, kpi);
   const isOk = band.label==='Výborný'||band.label==='Splněno';
   const optNote = isOk ? `<div class="optional-note" style="color:#9A6000">⚠ Evidence je povinná i pro zelené výsledky</div>` : '';
   return `<div class="form-tl-wrap ${cls}" id="form-tl-${kpi.id}">
@@ -1898,7 +2021,7 @@ function formTLHtml(band, val, kpi) {
     <div class="form-tl-info">
       <div class="form-tl-val">${valStr}</div>
       <div class="form-tl-band ${bcls}">${band.label} &nbsp;·&nbsp; ${band.pct} % bonusu &nbsp;·&nbsp; plnění ${(band.attainment===null||isNaN(band.attainment))?'—':band.attainment.toFixed(1)} %</div>
-      <div class="form-tl-target">Target ${kpi.lb?'≤':'≥'} ${kpi.target}${kpi.unit==='€'?' €':kpi.id==='prod2'?' ks':' %'} &nbsp;·&nbsp; Min ${kpi.lb?'≤':'≥'} ${kpi.min} %</div>
+      <div class="form-tl-target">Target ${kpi.lb?'≤':'≥'} ${kpi.target}${uSuffix(kpi)} &nbsp;·&nbsp; Min ${kpi.lb?'≤':'≥'} ${kpi.min}${uSuffix(kpi)}</div>
       ${optNote}
     </div>
   </div>`;
@@ -1933,7 +2056,7 @@ function updateFormTL(kpiId, deptId) {
     const dots = tlEl.querySelector('.form-tl-lights');
     if (dots) dots.innerHTML = lights.map((on,i)=>`<div class="form-tl-dot ${dcls[i]} ${on?lits[i]:''}" ></div>`).join('');
     const valEl = tlEl.querySelector('.form-tl-val');
-    if (valEl) valEl.textContent = isNaN(val) ? '—' : (kpi.unit==='€' ? Math.round(val).toLocaleString('cs-CZ')+' €' : (kpi.id==='prod2' ? Math.round(val)+' ks' : (val<10?val.toFixed(2):val.toFixed(1))+' %'));
+    if (valEl) valEl.textContent = fmtUnitVal(isNaN(val) ? null : val, kpi);
     const bandEl = tlEl.querySelector('.form-tl-band');
     const bcls = {'Výborný':'excellent','Splněno':'good','Částečně':'warning','Nesplněno':'danger','Bez dat':'none'}[band.label]||'none';
     if (bandEl) { bandEl.className = 'form-tl-band ' + bcls; bandEl.textContent = band.label + ' · ' + band.pct + ' % bonusu · plnění ' + ((band.attainment===null||isNaN(band.attainment))?'—':band.attainment.toFixed(1)) + ' %'; }
@@ -1991,7 +2114,7 @@ function openEntry(deptId, kpiId) {
     const v = kpi.data[i]!==null&&!isNaN(kpi.data[i]) ? kpi.data[i] : '';
     const onchange = `oninput="updateFormTL('${kpiId}','${deptId}')"`;
     const currentMark = i === activeMonthIdx ? ' style="border-color:var(--mid);font-weight:700"' : '';
-    const unitLabel = kpi.unit === '€' ? '€' : (kpi.id === 'prod2' ? 'ks' : '%');
+    const unitLabel = kpiUnit(kpi);
     mf += `<div class="m-field"><label class="m-lbl">${m}</label><input class="m-inp" type="number" step="0.01" id="inp-${kpiId}-${i}" value="${v}" placeholder="—" ${onchange}${currentMark}><span class="m-unit">${unitLabel}</span></div>`;
   });
 
@@ -2185,7 +2308,7 @@ async function saveEntry_form(deptId, kpiId) {
     saveEntry(entry);
 
     // Re-render dept
-    const slideId = deptId === 'me' ? 's0' : (deptId === 'log' ? 's1' : 's2');
+    const slideId = slideOf(deptId);
     renderDept(deptId, slideId);
     setTimeout(() => buildCharts(deptId), 60);
     updatePendingBadge();
@@ -2332,8 +2455,7 @@ function buildCharts(deptId) {
           tooltip:{
             callbacks:{
               label: ctx => {
-                const unit = kpi.unit === '€' ? ' €' : (kpi.id === 'prod2' ? ' ks' : ' %');
-                const fmt = (v) => kpi.unit === '€' ? Math.round(v).toLocaleString('cs-CZ') + ' €' : (kpi.id === 'prod2' ? v.toFixed(0) + ' ks' : v.toFixed(2) + ' %');
+                const fmt = (v) => fmtUnitVal(v, kpi);
                 if (ctx.datasetIndex !== 0) return ctx.dataset.label + ': ' + fmt(ctx.parsed.y);
                 if (isNaN(ctx.parsed.y)) return ' — bez dat';
                 const b = getBand(ctx.parsed.y, kpi);
@@ -2356,17 +2478,17 @@ function go(idx, el) {
   document.querySelectorAll('.sl').forEach((s,i)=>s.classList.toggle('on',i===idx));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  if (idx === 3) {
+  if (idx === LEGENDA_IDX) {
     // Legenda tab — render content if not already
     renderLegenda();
     return;
   }
-  const id = idx===0?'me':(idx===1?'log':'prod');
-  setTimeout(()=>buildCharts(id),60);
+  const id = DEPT_ORDER[idx];
+  if (id) setTimeout(()=>buildCharts(id),60);
 }
 
 function renderLegenda() {
-  const el = document.getElementById('s3');
+  const el = document.getElementById('s' + LEGENDA_IDX);
   if (!el) return;
   el.innerHTML = buildLegendaHtml();
 }
@@ -2385,7 +2507,7 @@ function thresholdPills(kpi) {
     const thr = m ? m[1] : '?';
     let cls = 'green';
     if (b.label === 'Částečně') cls = 'amber';
-    pills += `<span class="thr-pill ${cls}">${b.label} ${op} ${thr}${kpi.id.includes('scrap')||kpi.target<10?' %':' %'}</span>`;
+    pills += `<span class="thr-pill ${cls}">${b.label} ${op} ${thr}${uSuffix(kpi)}</span>`;
   });
   pills += '<span class="thr-pill red">Nesplněno · pod tolerancí</span>';
   return pills;
@@ -2400,90 +2522,37 @@ function buildLegendaHtml() {
     <p>Detailní vysvětlení všech KPI, výpočtu variabilní složky, RAG pásem, evidence a uživatelských rolí. Tato sekce slouží jako referenční dokumentace pro všechny uživatele dashboardu.</p>
   </div>`;
 
-  // Section 1: ME KPIs
-  html += `<div class="legenda-section">
-    <div class="leg-section-head" style="--sec-color:#1F3864">
-      <div class="leg-section-icon" style="background:#1F3864">🔧</div>
-      <div>
-        <h3>KPI Manufacturing Engineering</h3>
-        <div class="sec-sub">4 KPI · váha 25 % každé · max VS 16,3 % ze základní mzdy</div>
+  // Sections 1..N: one block per department, generated from DEPTS + DEPT_META
+  DEPT_ORDER.forEach(deptId => {
+    const dept = DEPTS[deptId];
+    const meta = DEPT_META[deptId] || { color:'#1F3864', icon:'📊', emojis:[], desc:'' };
+    html += `<div class="legenda-section">
+      <div class="leg-section-head" style="--sec-color:${meta.color}">
+        <div class="leg-section-icon" style="background:${meta.color}">${meta.icon}</div>
+        <div>
+          <h3>KPI ${dept.label}</h3>
+          <div class="sec-sub">${dept.kpis.length} KPI · váha 25 % každé · max VS ${(dept.varPct*100).toFixed(1).replace('.',',')} % ze základní mzdy</div>
+        </div>
       </div>
-    </div>
-    <p>Manufacturing Engineering Manager (David Varhan) odpovídá za výrobní efektivitu, plnění projektových termínů a kvalitu výrobního procesu.</p>
-    <div class="kpi-deep">`;
+      <p>${meta.desc}</p>
+      <div class="kpi-deep">`;
 
-  DEPTS.me.kpis.forEach((kpi, i) => {
-    const emojis = ['⚙','📅','🗑','⏱'];
-    html += `<div class="kpi-deep-card" style="border-left-color:#1F3864">
-      <div class="kpi-deep-name"><span class="kpi-emoji">${emojis[i]}</span> ${kpi.name}</div>
-      <div class="kpi-deep-sub">${kpi.sub}</div>
-      <div class="kpi-deep-rows">
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Target</span><span class="kpi-deep-value"><strong>${kpi.lb?'≤':'≥'} ${kpi.target} %</strong></span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Min</span><span class="kpi-deep-value">${kpi.lb?'≤':'≥'} ${kpi.min} %</span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Logika</span><span class="kpi-deep-value">${kpi.lb?'Nižší = lepší':'Vyšší = lepší'}</span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Zdroj</span><span class="kpi-deep-value">${kpi.source}</span></div>
-      </div>
-      <div class="kpi-deep-thresholds">${thresholdPills(kpi)}</div>
-    </div>`;
+    dept.kpis.forEach((kpi, i) => {
+      const emoji = (meta.emojis && meta.emojis[i]) ? meta.emojis[i] : '📌';
+      html += `<div class="kpi-deep-card" style="border-left-color:${meta.color}">
+        <div class="kpi-deep-name"><span class="kpi-emoji">${emoji}</span> ${kpi.name}</div>
+        <div class="kpi-deep-sub">${kpi.sub}</div>
+        <div class="kpi-deep-rows">
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Target</span><span class="kpi-deep-value"><strong>${kpi.lb?'≤':'≥'} ${kpi.target}${uSuffix(kpi)}</strong></span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Min</span><span class="kpi-deep-value">${kpi.lb?'≤':'≥'} ${kpi.min}${uSuffix(kpi)}</span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Logika</span><span class="kpi-deep-value">${kpi.lb?'Nižší = lepší':'Vyšší = lepší'}</span></div>
+          <div class="kpi-deep-row"><span class="kpi-deep-label">Zdroj</span><span class="kpi-deep-value">${kpi.source}</span></div>
+        </div>
+        <div class="kpi-deep-thresholds">${thresholdPills(kpi)}</div>
+      </div>`;
+    });
+    html += '</div></div>';
   });
-  html += '</div></div>';
-
-  // Section 2: LOG KPIs
-  html += `<div class="legenda-section">
-    <div class="leg-section-head" style="--sec-color:#0891B2">
-      <div class="leg-section-icon" style="background:#0891B2">📦</div>
-      <div>
-        <h3>KPI Logistics Manager</h3>
-        <div class="sec-sub">4 KPI · váha 25 % každé · max VS 16,3 % ze základní mzdy</div>
-      </div>
-    </div>
-    <p>Logistics Manager (Milan Lízala) odpovídá za včasné a kompletní dodávky, přesnost skladové evidence, spolehlivost zásobení linek a logistické náklady.</p>
-    <div class="kpi-deep">`;
-
-  DEPTS.log.kpis.forEach((kpi, i) => {
-    const emojis = ['🚚','📊','🔄','💰'];
-    html += `<div class="kpi-deep-card" style="border-left-color:#0891B2">
-      <div class="kpi-deep-name"><span class="kpi-emoji">${emojis[i]}</span> ${kpi.name}</div>
-      <div class="kpi-deep-sub">${kpi.sub}</div>
-      <div class="kpi-deep-rows">
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Target</span><span class="kpi-deep-value"><strong>${kpi.lb?'≤':'≥'} ${kpi.target} %</strong></span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Min</span><span class="kpi-deep-value">${kpi.lb?'≤':'≥'} ${kpi.min} %</span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Logika</span><span class="kpi-deep-value">${kpi.lb?'Nižší = lepší':'Vyšší = lepší'}</span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Zdroj</span><span class="kpi-deep-value">${kpi.source}</span></div>
-      </div>
-      <div class="kpi-deep-thresholds">${thresholdPills(kpi)}</div>
-    </div>`;
-  });
-  html += '</div></div>';
-
-  // Section 3: PROD KPIs
-  html += `<div class="legenda-section">
-    <div class="leg-section-head" style="--sec-color:#7C3AED">
-      <div class="leg-section-icon" style="background:#7C3AED">🏭</div>
-      <div>
-        <h3>KPI Production Manager</h3>
-        <div class="sec-sub">4 KPI · váha 25 % každé · max VS 16,3 % ze základní mzdy</div>
-      </div>
-    </div>
-    <p>Production Manager odpovídá za plnění výrobního plánu, kvalitu výroby (řízení reklamací), stabilitu týmu a pořádek na pracovišti.</p>
-    <div class="kpi-deep">`;
-
-  DEPTS.prod.kpis.forEach((kpi, i) => {
-    const emojis = ['📋','📞','👥','🧹'];
-    const unit = kpi.id === 'prod2' ? ' ks' : ' %';
-    html += `<div class="kpi-deep-card" style="border-left-color:#7C3AED">
-      <div class="kpi-deep-name"><span class="kpi-emoji">${emojis[i]}</span> ${kpi.name}</div>
-      <div class="kpi-deep-sub">${kpi.sub}</div>
-      <div class="kpi-deep-rows">
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Target</span><span class="kpi-deep-value"><strong>${kpi.lb?'≤':'≥'} ${kpi.target}${unit}</strong></span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Min</span><span class="kpi-deep-value">${kpi.lb?'≤':'≥'} ${kpi.min}${unit}</span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Logika</span><span class="kpi-deep-value">${kpi.lb?'Nižší = lepší':'Vyšší = lepší'}</span></div>
-        <div class="kpi-deep-row"><span class="kpi-deep-label">Zdroj</span><span class="kpi-deep-value">${kpi.source}</span></div>
-      </div>
-      <div class="kpi-deep-thresholds">${thresholdPills(kpi)}</div>
-    </div>`;
-  });
-  html += '</div></div>';
 
   // Section 4: Výpočet variabilní složky
   html += `<div class="legenda-section">
@@ -2640,28 +2709,20 @@ function buildLegendaHtml() {
       </div>
     </div>
     <p>Každý uživatel se přihlašuje vlastním heslem (vytvořeným při prvním přihlášení). Hesla jsou v databázi uložena jako SHA-256 hash. Přístupy jsou omezeny dle role:</p>
-    <div class="leg-roles">
-      <div class="leg-role-card" style="border-left-color:#1F3864">
-        <div class="leg-role-name">🔧 David Varhan</div>
-        <div class="leg-role-access">ME Manager — vidí a edituje pouze Manufacturing Engineering KPI a tasky.</div>
-        <div class="leg-role-tag">role: me</div>
-      </div>
-      <div class="leg-role-card" style="border-left-color:#0891B2">
-        <div class="leg-role-name">📦 Milan Lízala</div>
-        <div class="leg-role-access">Logistics Manager — vidí a edituje pouze Logistics KPI a tasky.</div>
-        <div class="leg-role-tag">role: log</div>
-      </div>
-      <div class="leg-role-card" style="border-left-color:#7C3AED">
-        <div class="leg-role-name">🏭 Production Manager</div>
-        <div class="leg-role-access">Production Manager — vidí a edituje pouze Production KPI a tasky.</div>
-        <div class="leg-role-tag">role: prod</div>
-      </div>
-      <div class="leg-role-card" style="border-left-color:#DC2626">
-        <div class="leg-role-name">👔 Milan Hanus</div>
-        <div class="leg-role-access">Operations Manager — admin přístup, vidí všechny 3 záložky + možnost resetu hesla.</div>
-        <div class="leg-role-tag">role: om (admin)</div>
-      </div>
-    </div>
+    <div class="leg-roles">`;
+
+  Object.keys(USERS).forEach(userName => {
+    const u = USERS[userName];
+    const rl = ROLE_LEGEND[u.role] || { emoji:'👤', text:'' };
+    const color = (DEPT_META[u.role] && DEPT_META[u.role].color) || '#DC2626';
+    html += `<div class="leg-role-card" style="border-left-color:${color}">
+        <div class="leg-role-name">${rl.emoji} ${userName}</div>
+        <div class="leg-role-access">${rl.text}</div>
+        <div class="leg-role-tag">role: ${u.role}${u.role === 'om' ? ' (admin)' : ''}</div>
+      </div>`;
+  });
+
+  html += `</div>
   </div>`;
 
   // Section 9: People Development
@@ -2717,6 +2778,9 @@ const USERS = {
   "David Varhan":       { role: "me",   label: "David Varhan (ME Manager)" },
   "Milan Lízala":       { role: "log",  label: "Milan Lízala (Logistics Manager)" },
   "Production Manager": { role: "prod", label: "Production Manager" },
+  "Quality Manager":    { role: "qua",  label: "Quality Manager" },
+  "CI Manager":         { role: "ci",   label: "CI Manager (Continuous Improvement)" },
+  "Finance Manager":    { role: "fin",  label: "Finance Manager" },
   "Milan Hanus":        { role: "om",   label: "Milan Hanus (Operation Manager)" },
 };
 
@@ -2762,7 +2826,10 @@ const ROLE_ACCESS = {
   "me":   ["me"],
   "log":  ["log"],
   "prod": ["prod"],
-  "om":   ["me", "log", "prod"],
+  "qua":  ["qua"],
+  "ci":   ["ci"],
+  "fin":  ["fin"],
+  "om":   DEPT_ORDER.slice(),
 };
 
 async function doLogin() {
@@ -2867,7 +2934,7 @@ function applyLoggedInUser(userName) {
   const accessibleDepts = ROLE_ACCESS[u.role];
   const tabs = document.querySelectorAll('.tab');
   const slides = document.querySelectorAll('.sl');
-  const deptIds = ['me', 'log', 'prod', 'legenda']; // legenda always allowed
+  const deptIds = DEPT_ORDER.concat(['legenda']); // legenda always allowed
 
   tabs.forEach((tab, i) => {
     if (deptIds[i] === 'legenda' || accessibleDepts.includes(deptIds[i])) {
@@ -2951,10 +3018,8 @@ function updateHeaderClock() {
 updateHeaderClock();
 setInterval(updateHeaderClock, 30000); // refresh every 30 s
 // Render once with empty data, Firebase sync will update
-renderDept('me','s0');
-renderDept('log','s1');
-renderDept('prod','s2');
-setTimeout(()=>buildCharts('me'),100);
+DEPT_ORDER.forEach(d => renderDept(d, slideOf(d)));
+setTimeout(()=>buildCharts(DEPT_ORDER[0]),100);
 updatePendingBadge();
 // Try auto-login from saved session
 tryAutoLogin();
