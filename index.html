@@ -471,6 +471,46 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
 .ap-open{background:#FFFBF0;border-left:3px solid var(--amber);padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;margin-top:4px}
 .ap-open strong{color:#8B5E00}
 
+/* PLANT OVERVIEW */
+.ov-hero{background:linear-gradient(135deg,#1F3864,#2E5090);color:#fff;border-radius:12px;padding:20px 24px;box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.ov-hero h2{font-size:18px;font-weight:600;letter-spacing:.2px}
+.ov-hero-sub{font-size:12px;opacity:.8;margin-top:3px}
+.ov-hero-counts{display:flex;gap:10px;flex-wrap:wrap}
+.ov-count{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;text-align:center;min-width:88px}
+.ov-count-val{font-size:22px;font-weight:800;line-height:1}
+.ov-count-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;opacity:.85;margin-top:4px}
+.ov-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.ov-tile{background:var(--card);border:1px solid var(--border);border-left:6px solid var(--border-strong);border-radius:12px;padding:18px 20px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:14px;text-align:left;font:inherit;color:inherit;width:100%}
+.ov-tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.ov-tile:focus-visible{outline:3px solid var(--mid);outline-offset:2px}
+.ov-tile.t-green{border-left-color:var(--green);background:linear-gradient(135deg,var(--green-dim),transparent 55%)}
+.ov-tile.t-amber{border-left-color:var(--amber);background:linear-gradient(135deg,var(--amber-dim),transparent 55%)}
+.ov-tile.t-red{border-left-color:var(--red);background:linear-gradient(135deg,var(--red-dim),transparent 55%)}
+.ov-tile-head{display:flex;align-items:center;gap:12px}
+.ov-tile-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;flex:none}
+.ov-tile-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.25}
+.ov-tile-owner{font-size:11px;color:var(--muted);margin-top:2px}
+.ov-status{margin-left:auto;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:6px 12px;border-radius:20px;white-space:nowrap;flex:none}
+.ov-status.t-green{background:var(--green);color:#fff}
+.ov-status.t-amber{background:var(--amber);color:#fff}
+.ov-status.t-red{background:var(--red);color:#fff}
+.ov-status.t-gray{background:#E2E8F0;color:var(--muted)}
+.ov-score{display:flex;align-items:baseline;gap:10px}
+.ov-score-val{font-size:38px;font-weight:800;line-height:1}
+.ov-score-lbl{font-size:11px;color:var(--muted);line-height:1.4}
+.ov-bar{height:8px;border-radius:5px;background:#E2E8F0;overflow:hidden}
+.ov-bar-fill{height:100%;border-radius:5px}
+.ov-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ov-chip{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--bg);border:1px solid var(--border);color:var(--text-secondary)}
+.ov-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.ov-chip-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+.ov-tile-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:11px;color:var(--muted);border-top:1px dashed var(--border);padding-top:10px}
+.ov-foot-warn{color:#B45309;font-weight:700}
+.ov-foot-bad{color:var(--red);font-weight:700}
+.ov-cta{margin-left:auto;font-size:11px;font-weight:700;color:var(--mid)}
+.ov-empty{background:var(--card);border:1px dashed var(--border-strong);border-radius:12px;padding:28px;text-align:center;color:var(--muted);font-size:13px}
+@media(max-width:900px){.ov-tiles{grid-template-columns:1fr}}
+
 @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.month-grid{grid-template-columns:repeat(3,1fr)}.chart-grid{grid-template-columns:1fr}.bonus-grid{grid-template-columns:repeat(2,1fr)}.main{padding:14px 16px}.header,.tab-bar{padding:10px 16px}}
 </style>
 </head>
@@ -493,7 +533,7 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
         <option value="Quality Manager">Quality Manager</option>
         <option value="CI Manager">CI Manager (Continuous Improvement)</option>
         <option value="Finance Manager">Finance Manager</option>
-        <option value="Milan Hanus">Milan Hanus (Operation Manager)</option>
+        <option value="Milan Hanus">Milan Hanus (Plant Manager)</option>
       </select>
     </div>
     <div class="login-field">
@@ -510,7 +550,7 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
 <div class="header">
   <div class="header-left">
     <h1>KPI Dashboard — Operations</h1>
-    <div class="sub">6 oddělení · 4 KPI po 25 % · Sledování celý kalendářní rok</div>
+    <div class="sub">6 oddělení · variabilní složka max 16,3 % · Sledování celý kalendářní rok</div>
   </div>
   <div class="header-right">
     <span class="badge" id="hdr-month" title="Poslední uzavřený měsíc"></span>
@@ -526,13 +566,14 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
 
 <div class="tab-bar">
   <div class="tab-group">
-    <button class="tab active" onclick="go(0,this)">Manufacturing Engineering</button>
-    <button class="tab" onclick="go(1,this)">Logistics Manager</button>
-    <button class="tab" onclick="go(2,this)">Production Manager</button>
-    <button class="tab" onclick="go(3,this)">Quality Manager</button>
-    <button class="tab" onclick="go(4,this)">Continuous Improvement</button>
-    <button class="tab" onclick="go(5,this)">Finance Manager</button>
-    <button class="tab" onclick="go(6,this)" style="background:linear-gradient(135deg,#5D3FD3,#7A5CE0);color:white">📖 Legenda</button>
+    <button class="tab active" onclick="go(0,this)" style="background:linear-gradient(135deg,#0F2A4D,#1F3864);color:white">🏭 Přehled plantu</button>
+    <button class="tab" onclick="go(1,this)">Manufacturing Engineering</button>
+    <button class="tab" onclick="go(2,this)">Logistics Manager</button>
+    <button class="tab" onclick="go(3,this)">Production Manager</button>
+    <button class="tab" onclick="go(4,this)">Quality Manager</button>
+    <button class="tab" onclick="go(5,this)">Continuous Improvement</button>
+    <button class="tab" onclick="go(6,this)">Finance Manager</button>
+    <button class="tab" onclick="go(7,this)" style="background:linear-gradient(135deg,#5D3FD3,#7A5CE0);color:white">📖 Legenda</button>
   </div>
   <div class="tab-actions">
     <button class="btn" onclick="showHistory()">📋 Historie zadání</button>
@@ -548,6 +589,7 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
   <div class="sl" id="s4"></div>
   <div class="sl" id="s5"></div>
   <div class="sl" id="s6"></div>
+  <div class="sl" id="s7"></div>
 </div>
 
 <!-- HISTORY MODAL -->
@@ -772,24 +814,34 @@ const DEPTS = {
 // Tab index === slide index === position in DEPT_ORDER. The Legenda tab always
 // sits right after the last department.
 const DEPT_ORDER = ['me', 'log', 'prod', 'qua', 'ci', 'fin'];
-const LEGENDA_IDX = DEPT_ORDER.length;
-function slideOf(deptId) {
-  const i = DEPT_ORDER.indexOf(deptId);
+// Tab index === slide index === position in TAB_ORDER. 'overview' is the plant
+// manager's landing tab, 'legenda' always sits last.
+const TAB_ORDER = ['overview'].concat(DEPT_ORDER, ['legenda']);
+const OVERVIEW_IDX = TAB_ORDER.indexOf('overview');
+const LEGENDA_IDX = TAB_ORDER.indexOf('legenda');
+function slideOf(tabId) {
+  const i = TAB_ORDER.indexOf(tabId);
   return 's' + (i < 0 ? 0 : i);
+}
+// 'overview' only earns a tab when the user can see more than one department
+function isTabAllowed(tabId, accessibleDepts) {
+  if (tabId === 'legenda') return true;
+  if (tabId === 'overview') return accessibleDepts.length > 1;
+  return accessibleDepts.includes(tabId);
 }
 
 const DEPT_META = {
-  me:   { color:'#1F3864', icon:'🔧', emojis:['⚙','📅','🗑','⏱'],
+  me:   { color:'#1F3864', icon:'🔧', owner:'David Varhan', emojis:['⚙','📅','🗑','⏱'],
           desc:'Manufacturing Engineering Manager (David Varhan) odpovídá za výrobní efektivitu, plnění projektových termínů a kvalitu výrobního procesu.' },
-  log:  { color:'#0891B2', icon:'📦', emojis:['🚚','📊','🔄','💰'],
+  log:  { color:'#0891B2', icon:'📦', owner:'Milan Lízala', emojis:['🚚','📊','🔄','💰'],
           desc:'Logistics Manager (Milan Lízala) odpovídá za včasné a kompletní dodávky, přesnost skladové evidence, pořádek v logistice a logistické náklady.' },
-  prod: { color:'#7C3AED', icon:'🏭', emojis:['📋','📞','👥','🧹'],
+  prod: { color:'#7C3AED', icon:'🏭', owner:'', emojis:['📋','📞','👥','🧹'],
           desc:'Production Manager odpovídá za plnění výrobního plánu, kvalitu výroby (řízení reklamací), stabilitu týmu a pořádek na pracovišti.' },
-  qua:  { color:'#C0392B', icon:'🔍', emojis:['🎯','📋','💸','🕵','📑','🔁'],
+  qua:  { color:'#C0392B', icon:'🔍', owner:'Roman', emojis:['🎯','📋','💸','🕵','📑','🔁'],
           desc:'Quality Manager (Roman) odpovídá za zákaznické PPM, uzavírání reklamací a akčních plánů v termínu, recovery nákladů na kvalitu, plnění plánu interních auditů a včasnost PPAP.' },
-  ci:   { color:'#00875A', icon:'💡', emojis:['⏰','💶','📈','🎯'],
+  ci:   { color:'#00875A', icon:'💡', owner:'Hanka + Tomáš', emojis:['⏰','💶','📈','🎯'],
           desc:'Continuous Improvement (Hanka + Tomáš) odpovídá za plnění úloh z action planu v termínu, úspory vůči ovlivnitelným nákladům a dodržení plánu CI programů.' },
-  fin:  { color:'#B7791F', icon:'📈', emojis:['🧾','🔮','🛒','📤'],
+  fin:  { color:'#B7791F', icon:'📈', owner:'Radek', emojis:['🧾','🔮','🛒','📤'],
           desc:'Finance Manager (Radek) odpovídá za report měsíčních nákladů, přesnost outlooku vůči reálnému EBIT, včasné zpracování objednávek a vystavení PAT.' },
 };
 
@@ -801,7 +853,7 @@ const ROLE_LEGEND = {
   qua:  { emoji:'🔍', text:'Quality Manager — vidí a edituje pouze Quality KPI a tasky.' },
   ci:   { emoji:'💡', text:'CI Manager — vidí a edituje pouze Continuous Improvement KPI a tasky.' },
   fin:  { emoji:'📈', text:'Finance Manager — vidí a edituje pouze Finance KPI a tasky.' },
-  om:   { emoji:'👔', text:'Operations Manager — admin přístup, vidí všech 6 oddělení + možnost resetu hesla.' },
+  om:   { emoji:'👔', text:'Plant Manager — admin přístup, přehled plantu, všech 6 oddělení + možnost resetu hesla.' },
 };
 
 // ─── UNIT HELPERS ────────────────────────────────────────────────────────────
@@ -947,8 +999,9 @@ function setupFirebaseSync() {
         }
       });
     });
-    // Re-render all depts
+    // Re-render all depts + the roll-up overview
     DEPT_ORDER.forEach(d => renderDept(d, slideOf(d)));
+    renderOverview();
     // Rebuild charts only for active tab
     const activeTab = document.querySelector('.tab.active');
     const idx = activeTab ? Array.from(document.querySelectorAll('.tab')).indexOf(activeTab) : 0;
@@ -1915,7 +1968,7 @@ function renderBonus(deptId) {
       <div style="font-size:10px;color:var(--muted);margin-top:1px">plnění vůči Targetu</div>
       <div style="margin-top:6px"><span class="bonus-band" style="font-weight:700;color:${col}">${band.label}</span> <span style="font-size:10px;color:var(--muted)">→ ${band.pct} % bonusu</span></div>
       <div style="font-size:11px;color:var(--dark);margin-top:6px;background:var(--bg);padding:4px 6px;border-radius:4px">
-        25 % × ${band.pct} % = <strong>${contrib.toFixed(1)} %</strong>
+        ${fmtWeight(kpi.weight)} % × ${band.pct} % = <strong>${contrib.toFixed(1)} %</strong>
       </div>
     </div>`;
   });
@@ -2323,6 +2376,7 @@ async function saveEntry_form(deptId, kpiId) {
     // Re-render dept
     const slideId = slideOf(deptId);
     renderDept(deptId, slideId);
+    renderOverview();
     setTimeout(() => buildCharts(deptId), 60);
     updatePendingBadge();
     closeEntry(deptId);
@@ -2486,17 +2540,145 @@ function buildCharts(deptId) {
   });
 }
 
+// ─── PLANT OVERVIEW ──────────────────────────────────────────────────────────
+// Landing tab for anyone who owns more than one department: one tile per
+// department showing at a glance whether it is on target, plus the operational
+// flags worth knowing before drilling in.
+const OV_STATUS = {
+  green: { label: 'Plní',     dot: '🟢', cls: 't-green', color: 'var(--green)' },
+  amber: { label: 'Na hraně', dot: '🟠', cls: 't-amber', color: 'var(--amber)' },
+  red:   { label: 'Neplní',   dot: '🔴', cls: 't-red',   color: 'var(--red)' },
+  gray:  { label: 'Bez dat',  dot: '⚪', cls: 't-gray',  color: 'var(--muted)' },
+};
+
+// Roll a department up to a single status: red if any KPI is Nesplněno, amber
+// if any is Částečně, green only when every KPI with data is at 100 % bonus.
+function deptSummary(deptId) {
+  const dept = DEPTS[deptId];
+  const store = loadStore();
+  const entries = store.entries || [];
+  let totalPct = 0, withData = 0, green = 0, amber = 0, red = 0, noEvidence = 0;
+
+  const kpis = dept.kpis.map(kpi => {
+    const cur = getCurrentValue(kpi);
+    const band = getBand(cur, kpi);
+    totalPct += (kpi.weight / 100) * band.pct;
+    let state = 'gray';
+    if (cur !== null && !isNaN(cur)) {
+      withData++;
+      state = band.pct === 100 ? 'green' : band.pct >= 50 ? 'amber' : 'red';
+      if (state === 'green') green++; else if (state === 'amber') amber++; else red++;
+    }
+    const last = entries.find(e => e.kpiId === kpi.id);
+    if (last && (!last.evidenceType || last.evidenceType === 'none')) noEvidence++;
+    return { kpi, cur, band, state };
+  });
+
+  const status = withData === 0 ? 'gray' : (red > 0 ? 'red' : amber > 0 ? 'amber' : 'green');
+  const tasks = getDeptTasks(deptId);
+  return {
+    id: deptId, dept, kpis, status, totalPct, withData, green, amber, red, noEvidence,
+    openTasks: tasks.filter(t => t.status !== 'done').length,
+    overdueTasks: tasks.filter(t => isOverdue(t)).length,
+    openAp: entries.filter(e => e.deptId === deptId && e.apAction && !e.apClosed).length,
+    lastEntry: entries.find(e => e.deptId === deptId),
+  };
+}
+
+function renderOverview() {
+  const el = document.getElementById(slideOf('overview'));
+  if (!el) return;
+  const sel = document.getElementById('user-select');
+  const u = sel && sel.value ? USERS[sel.value] : null;
+  const depts = u ? DEPT_ORDER.filter(d => ROLE_ACCESS[u.role].includes(d)) : DEPT_ORDER.slice();
+
+  if (!depts.length) {
+    el.innerHTML = '<div class="ov-empty">Nemáte přiřazené žádné oddělení.</div>';
+    return;
+  }
+
+  const sums = depts.map(deptSummary);
+  const counts = { green: 0, amber: 0, red: 0, gray: 0 };
+  sums.forEach(x => counts[x.status]++);
+  const totalOverdue = sums.reduce((a, x) => a + x.overdueTasks, 0);
+  const totalPending = sums.reduce((a, x) => a + x.noEvidence, 0);
+
+  let html = `<div class="ov-hero">
+    <div>
+      <h2>🏭 Přehled plantu — stav oddělení</h2>
+      <div class="ov-hero-sub">${depts.length} oddělení · klikni na dlaždici pro detailní KPI oddělení</div>
+    </div>
+    <div class="ov-hero-counts">
+      <div class="ov-count"><div class="ov-count-val">${counts.green}</div><div class="ov-count-lbl">🟢 Plní</div></div>
+      <div class="ov-count"><div class="ov-count-val">${counts.amber}</div><div class="ov-count-lbl">🟠 Na hraně</div></div>
+      <div class="ov-count"><div class="ov-count-val">${counts.red}</div><div class="ov-count-lbl">🔴 Neplní</div></div>
+      <div class="ov-count"><div class="ov-count-val">${counts.gray}</div><div class="ov-count-lbl">⚪ Bez dat</div></div>
+      <div class="ov-count"><div class="ov-count-val">${totalOverdue}</div><div class="ov-count-lbl">Úkoly po termínu</div></div>
+      <div class="ov-count"><div class="ov-count-val">${totalPending}</div><div class="ov-count-lbl">Čeká na evidenci</div></div>
+    </div>
+  </div>`;
+
+  html += '<div class="ov-tiles">';
+  sums.forEach(sm => {
+    const deptId = sm.id;
+    const meta = DEPT_META[deptId] || { color: '#1F3864', icon: '📊', owner: '' };
+    const st = OV_STATUS[sm.status];
+    const vs = (16.3 * sm.totalPct / 100).toFixed(2).replace('.', ',');
+
+    const chips = sm.kpis.map(k => `<span class="ov-chip" title="${k.kpi.name} — ${k.band.label}${k.cur === null ? '' : ' (' + fmtVal(k.cur, k.kpi) + ')'}">
+        <span class="ov-dot" style="background:${OV_STATUS[k.state].color}"></span>
+        <span class="ov-chip-txt">${k.kpi.name}</span>
+      </span>`).join('');
+
+    const foot = [];
+    foot.push(`${sm.green}/${sm.dept.kpis.length} KPI na cíli`);
+    if (sm.withData < sm.dept.kpis.length) foot.push(`<span class="ov-foot-warn">${sm.dept.kpis.length - sm.withData} bez hodnoty</span>`);
+    if (sm.noEvidence) foot.push(`<span class="ov-foot-warn">⚠ ${sm.noEvidence} čeká na evidenci</span>`);
+    if (sm.openAp) foot.push(`<span class="ov-foot-warn">${sm.openAp} otevřený AP</span>`);
+    if (sm.overdueTasks) foot.push(`<span class="ov-foot-bad">${sm.overdueTasks} úkolů po termínu</span>`);
+    else if (sm.openTasks) foot.push(`${sm.openTasks} otevřených úkolů`);
+
+    html += `<button type="button" class="ov-tile ${st.cls}" onclick="goToDept('${deptId}')" aria-label="${sm.dept.label} — ${st.label}, plnění ${sm.totalPct.toFixed(0)} %. Otevřít detail.">
+      <div class="ov-tile-head">
+        <div class="ov-tile-icon" style="background:${meta.color}">${meta.icon}</div>
+        <div>
+          <div class="ov-tile-name">${sm.dept.label}</div>
+          ${meta.owner ? `<div class="ov-tile-owner">${meta.owner}</div>` : ''}
+        </div>
+        <span class="ov-status ${st.cls}">${st.dot} ${st.label}</span>
+      </div>
+      <div>
+        <div class="ov-score">
+          <span class="ov-score-val" style="color:${st.color}">${sm.withData ? sm.totalPct.toFixed(0) + ' %' : '—'}</span>
+          <span class="ov-score-lbl">plnění bonusu<br>${sm.withData ? '= ' + vs + ' % ze základní mzdy' : 'zatím bez zadaných hodnot'}</span>
+        </div>
+        <div class="ov-bar" style="margin-top:10px"><div class="ov-bar-fill" style="width:${Math.max(0, Math.min(100, sm.totalPct))}%;background:${st.color}"></div></div>
+      </div>
+      <div class="ov-chips">${chips}</div>
+      <div class="ov-tile-foot">${foot.join('<span style="opacity:.4">·</span>')}<span class="ov-cta">Detail →</span></div>
+    </button>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// Jump from an overview tile straight into that department's tab
+function goToDept(deptId) {
+  const idx = TAB_ORDER.indexOf(deptId);
+  const tab = document.querySelectorAll('.tab')[idx];
+  if (!tab) return;
+  go(idx, tab);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // ─── TAB NAV ─────────────────────────────────────────────────────────────────
 function go(idx, el) {
   document.querySelectorAll('.sl').forEach((s,i)=>s.classList.toggle('on',i===idx));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  if (idx === LEGENDA_IDX) {
-    // Legenda tab — render content if not already
-    renderLegenda();
-    return;
-  }
-  const id = DEPT_ORDER[idx];
+  const id = TAB_ORDER[idx];
+  if (id === 'legenda') { renderLegenda(); return; }
+  if (id === 'overview') { renderOverview(); return; }
   if (id) setTimeout(()=>buildCharts(id),60);
 }
 
@@ -2794,7 +2976,7 @@ const USERS = {
   "Quality Manager":    { role: "qua",  label: "Quality Manager" },
   "CI Manager":         { role: "ci",   label: "CI Manager (Continuous Improvement)" },
   "Finance Manager":    { role: "fin",  label: "Finance Manager" },
-  "Milan Hanus":        { role: "om",   label: "Milan Hanus (Operation Manager)" },
+  "Milan Hanus":        { role: "om",   label: "Milan Hanus (Plant Manager)" },
 };
 
 // SHA-256 hash helper (browser native)
@@ -2947,10 +3129,8 @@ function applyLoggedInUser(userName) {
   const accessibleDepts = ROLE_ACCESS[u.role];
   const tabs = document.querySelectorAll('.tab');
   const slides = document.querySelectorAll('.sl');
-  const deptIds = DEPT_ORDER.concat(['legenda']); // legenda always allowed
-
   tabs.forEach((tab, i) => {
-    if (deptIds[i] === 'legenda' || accessibleDepts.includes(deptIds[i])) {
+    if (isTabAllowed(TAB_ORDER[i], accessibleDepts)) {
       tab.style.display = '';
     } else {
       tab.style.display = 'none';
@@ -2959,20 +3139,23 @@ function applyLoggedInUser(userName) {
   });
 
   slides.forEach((sl, i) => {
-    if (deptIds[i] !== 'legenda' && !accessibleDepts.includes(deptIds[i])) {
-      sl.classList.remove('on');
-    }
+    if (!isTabAllowed(TAB_ORDER[i], accessibleDepts)) sl.classList.remove('on');
   });
 
-  // Activate the first allowed tab
-  const firstAllowedIdx = deptIds.findIndex(d => accessibleDepts.includes(d));
+  // Land on the overview when the user owns several departments, otherwise on
+  // their own department
+  const firstAllowedIdx = TAB_ORDER.findIndex(
+    t => t !== 'legenda' && isTabAllowed(t, accessibleDepts)
+  );
   if (firstAllowedIdx !== -1) {
     tabs.forEach(t => t.classList.remove('active'));
     slides.forEach(s => s.classList.remove('on'));
     tabs[firstAllowedIdx].classList.add('active');
     slides[firstAllowedIdx].classList.add('on');
-    setTimeout(() => buildCharts(deptIds[firstAllowedIdx]), 60);
+    const landedOn = TAB_ORDER[firstAllowedIdx];
+    if (landedOn !== 'overview') setTimeout(() => buildCharts(landedOn), 60);
   }
+  renderOverview();
 }
 
 function doLogout() {
@@ -3032,6 +3215,7 @@ updateHeaderClock();
 setInterval(updateHeaderClock, 30000); // refresh every 30 s
 // Render once with empty data, Firebase sync will update
 DEPT_ORDER.forEach(d => renderDept(d, slideOf(d)));
+renderOverview();
 setTimeout(()=>buildCharts(DEPT_ORDER[0]),100);
 updatePendingBadge();
 // Try auto-login from saved session
