@@ -684,75 +684,85 @@ const DEPTS = {
   qua: {
     label: 'Quality Manager', varPct: 0.163,
     kpis: [
-      { id:'qua1', name:'Customer PPM', sub:'Vadné díly na milion dodaných kusů (zákaznické reklamace)', color:'red',
-        target:10, min:50, lb:true, weight:25, unit:'ppm',
-        bands:[{label:'Výborný',pct:100,cond:v=>v<=10},{label:'Splněno',pct:100,cond:v=>v<=25},{label:'Částečně',pct:50,cond:v=>v<=50},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Zákaznické portály + evidence reklamací', systemSource:'Zákaznický portál – PPM report',
+      { id:'qua1', name:'Monthly Project PPM Performance', sub:'Zákaznické PPM na projektech (cíl 150 PPM)', color:'red',
+        target:150, min:300, lb:true, weight:16.7, unit:'ppm',
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=150},{label:'Splněno',pct:100,cond:v=>v<=200},{label:'Částečně',pct:50,cond:v=>v<=300},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Zákaznický portál – PPM report per projekt', systemSource:'Zákaznický portál – PPM report',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'qua2', name:'8D On-Time Response', sub:'Reklamace uzavřené 8D reportem v termínu zákazníka', color:'blue',
-        target:95, min:85, lb:false, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=85},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Quality systém – CAPA / 8D tracker', systemSource:'CAPA / 8D tracker – termín vs. odeslání',
+      { id:'qua2', name:'Interná kvalita (reklamácie / akčné plány)', sub:'Reklamace a akční plány uzavřené v termínu (cíl 100 % closed in time)', color:'blue',
+        target:100, min:90, lb:false, weight:16.7,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=100},{label:'Splněno',pct:100,cond:v=>v>=95},{label:'Částečně',pct:50,cond:v=>v>=90},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Interní evidence reklamací a akčních plánů (CAPA)', systemSource:'CAPA / evidence interní kvality',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'qua3', name:'Cost of Poor Quality (COPQ)', sub:'Náklady na nekvalitu jako % z obratu plantu', color:'amber',
-        target:0.5, min:1, lb:true, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v<=0.5},{label:'Splněno',pct:100,cond:v=>v<=0.75},{label:'Částečně',pct:50,cond:v=>v<=1},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Controlling – COPQ report (scrap, třídění, claimy, dobropisy)', systemSource:'Controlling – COPQ report',
+      { id:'qua3', name:'SQ Recovery of Quality Costs', sub:'Náklady na kvalitu přeúčtované dodavateli (cíl 100 % cus. relevant vs. supplier)', color:'amber',
+        target:100, min:80, lb:false, weight:16.7,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=100},{label:'Splněno',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=80},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'SQ – recovery nákladů na kvalitu vs. dodavatel', systemSource:'Controlling / SQ – recovery report',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'qua4', name:'Layered Process Audit (LPA)', sub:'Plnění plánu vrstvených procesních auditů', color:'green',
-        target:95, min:85, lb:false, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=85},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'LPA plán vs. provedené audity', systemSource:'LPA tracker (interní)',
+      { id:'qua4', name:'Otevřené akce po termínu v AP z auditů', sub:'Počet akcí z auditních action planů po stanoveném termínu (cíl 0)', color:'red',
+        target:0, min:2, lb:true, weight:16.7, unit:'ks',
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=0},{label:'Splněno',pct:100,cond:v=>v<=1},{label:'Částečně',pct:50,cond:v=>v<=2},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Action plan z auditů – otevřené akce po termínu', systemSource:'Audit action plan tracker',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'qua5', name:'Plnenie plánu interných auditov', sub:'VDA6.3, FQF, D/TLD – audity provedené dle plánu (cíl 100 % done acc plan)', color:'green',
+        target:100, min:90, lb:false, weight:16.6,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=100},{label:'Splněno',pct:100,cond:v=>v>=95},{label:'Částečně',pct:50,cond:v=>v>=90},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Plán interních auditů VDA6.3 / FQF / D-TLD vs. skutečnost', systemSource:'Plán interních auditů',
+        data:[null,null,null,null,null,null,null,null,null,null,null,null] },
+      { id:'qua6', name:'Úspešnosť a včasnosť PPAP / Zmien', sub:'PPAP odeslané v termínu vs. relevantní změny (cíl 100 % PPAP in time)', color:'purple',
+        target:100, min:90, lb:false, weight:16.6,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=100},{label:'Splněno',pct:100,cond:v=>v>=95},{label:'Částečně',pct:50,cond:v=>v>=90},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'PPAP / evidence změn – termíny vs. skutečné odeslání', systemSource:'PPAP tracker / change management',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
     ]
   },
   ci: {
-    label: 'Continuous Improvement', varPct: 0.163,
+    label: 'Continuous Improvement', varPct: 0.163, peopleDev: false,
     kpis: [
-      { id:'ci1', name:'Realizované úspory', sub:'Controllingem ověřené úspory z CI projektů (€/měsíc)', color:'green',
-        target:20000, min:10000, lb:false, weight:25, unit:'€',
-        bands:[{label:'Výborný',pct:100,cond:v=>v>=20000},{label:'Splněno',pct:100,cond:v=>v>=15000},{label:'Částečně',pct:50,cond:v=>v>=10000},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Controlling – savings tracker (validované úspory)', systemSource:'Savings tracker – validace controllingem',
+      { id:'ci1', name:'Úlohy z AP mimo stanovený termín', sub:'Počet úloh z action planu po termínu (cíl 0)', color:'red',
+        target:0, min:2, lb:true, weight:25, unit:'ks',
+        bands:[{label:'Výborný',pct:100,cond:v=>v<=0},{label:'Částečně',pct:50,cond:v=>v<=2},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'CI action plan – úlohy po stanoveném termínu', systemSource:'CI action plan tracker',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'ci2', name:'Implementované zlepšovací návrhy', sub:'Počet realizovaných návrhů za měsíc', color:'blue',
-        target:10, min:4, lb:false, weight:25, unit:'ks',
-        bands:[{label:'Výborný',pct:100,cond:v=>v>=10},{label:'Splněno',pct:100,cond:v=>v>=7},{label:'Částečně',pct:50,cond:v=>v>=4},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Databáze zlepšovacích návrhů (Kaizen / CIP)', systemSource:'Kaizen / CIP databáze',
+      { id:'ci2', name:'Saving vs controlable cost', sub:'Úspory jako % z ovlivnitelných nákladů', color:'green',
+        target:8, min:5, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=8},{label:'Částečně',pct:50,cond:v=>v>=5},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Controlling – saving vs. controllable cost', systemSource:'Controlling – savings report',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'ci3', name:'Plnění plánu CI projektů', sub:'Milníky CI projektů splněné v termínu', color:'amber',
-        target:90, min:70, lb:false, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Splněno',pct:100,cond:v=>v>=80},{label:'Částečně',pct:50,cond:v=>v>=70},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'CI project tracker – milníky vs. plán', systemSource:'CI project tracker',
+      { id:'ci3', name:'Adherence to plan of CI programs', sub:'Dodržení plánu CI programů', color:'blue',
+        target:95, min:85, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Částečně',pct:50,cond:v=>v>=85},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'CI program tracker – adherence to plan', systemSource:'CI program tracker',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'ci4', name:'Zapojení zaměstnanců do CI', sub:'% zaměstnanců s min. 1 podaným návrhem (rolling 12 M)', color:'purple',
-        target:30, min:15, lb:false, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v>=30},{label:'Splněno',pct:100,cond:v=>v>=20},{label:'Částečně',pct:50,cond:v=>v>=15},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Kaizen databáze + stav zaměstnanců z HR', systemSource:'Kaizen databáze / HR headcount',
+      { id:'ci4', name:'Plnění CI plánu', sub:'Plnění celkového CI plánu', color:'amber',
+        target:90, min:75, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=75},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'CI plán – plnění vs. plán', systemSource:'CI plán',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
     ]
   },
   fin: {
-    label: 'Finance Manager', varPct: 0.163,
+    label: 'Finance Manager', varPct: 0.163, peopleDev: false,
     kpis: [
-      { id:'fin1', name:'Plnění rozpočtu (Budget Adherence)', sub:'Odchylka skutečných nákladů od schváleného rozpočtu', color:'blue',
-        target:2, min:5, lb:true, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v<=2},{label:'Splněno',pct:100,cond:v=>v<=3.5},{label:'Částečně',pct:50,cond:v=>v<=5},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Controlling – actual vs. budget (měsíční report)', systemSource:'SAP / Controlling – budget report',
+      { id:'fin1', name:'CC — report měsíčních nákladů', sub:'Report měsíčních nákladů podle odpovědných manažerů (cíl 90 % budget)', color:'blue',
+        target:90, min:80, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Splněno',pct:100,cond:v=>v>=85},{label:'Částečně',pct:50,cond:v=>v>=80},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Cost center report – měsíční náklady dle odpovědných manažerů', systemSource:'Controlling – CC report',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'fin2', name:'Měsíční uzávěrka v termínu', sub:'Počet pracovních dnů do uzavření měsíce', color:'green',
-        target:3, min:5, lb:true, weight:25, unit:'dní',
-        bands:[{label:'Výborný',pct:100,cond:v=>v<=3},{label:'Splněno',pct:100,cond:v=>v<=4},{label:'Částečně',pct:50,cond:v=>v<=5},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Closing kalendář – datum uzavření vs. konec měsíce', systemSource:'SAP – closing log',
+      { id:'fin2', name:'Outlook vs. reálný výsledek', sub:'Přesnost celého EBIT bez commercial a FX (cíl 90 % posledního outlooku)', color:'amber',
+        target:90, min:80, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=90},{label:'Splněno',pct:100,cond:v=>v>=85},{label:'Částečně',pct:50,cond:v=>v>=80},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Outlook vs. actual – EBIT bez commercial a FX', systemSource:'Controlling – outlook accuracy',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'fin3', name:'Přesnost forecastu', sub:'Shoda forecastu se skutečným výsledkem měsíce', color:'amber',
-        target:95, min:90, lb:false, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=92},{label:'Částečně',pct:50,cond:v=>v>=90},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Controlling – forecast vs. actual', systemSource:'Controlling – forecast accuracy report',
+      { id:'fin3', name:'Objednávky načas', sub:'Schválení ve financích a včasné zpracování objednávky (cíl 95 %; kompletní schválení požadavku nelze garantovat)', color:'green',
+        target:95, min:85, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=95},{label:'Splněno',pct:100,cond:v=>v>=90},{label:'Částečně',pct:50,cond:v=>v>=85},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Nákupní objednávky – schválení a zpracování ve financích', systemSource:'ERP – objednávky, workflow schválení',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
-      { id:'fin4', name:'Pohledávky po splatnosti', sub:'% pohledávek po splatnosti z celkových pohledávek', color:'red',
-        target:2, min:5, lb:true, weight:25,
-        bands:[{label:'Výborný',pct:100,cond:v=>v<=2},{label:'Splněno',pct:100,cond:v=>v<=3.5},{label:'Částečně',pct:50,cond:v=>v<=5},{label:'Nesplněno',pct:0,cond:()=>true}],
-        source:'Controlling – AR aging report', systemSource:'SAP – AR aging report',
+      { id:'fin4', name:'Vystavení PAT načas', sub:'PAT vystavené v termínu (cíl 100 %)', color:'purple',
+        target:100, min:95, lb:false, weight:25,
+        bands:[{label:'Výborný',pct:100,cond:v=>v>=100},{label:'Splněno',pct:100,cond:v=>v>=98},{label:'Částečně',pct:50,cond:v=>v>=95},{label:'Nesplněno',pct:0,cond:()=>true}],
+        source:'Evidence PAT – termín vystavení', systemSource:'Evidence PAT',
         data:[null,null,null,null,null,null,null,null,null,null,null,null] },
     ]
   }
@@ -775,12 +785,12 @@ const DEPT_META = {
           desc:'Logistics Manager (Milan Lízala) odpovídá za včasné a kompletní dodávky, přesnost skladové evidence, pořádek v logistice a logistické náklady.' },
   prod: { color:'#7C3AED', icon:'🏭', emojis:['📋','📞','👥','🧹'],
           desc:'Production Manager odpovídá za plnění výrobního plánu, kvalitu výroby (řízení reklamací), stabilitu týmu a pořádek na pracovišti.' },
-  qua:  { color:'#C0392B', icon:'🔍', emojis:['🎯','📄','💸','🕵'],
-          desc:'Quality Manager odpovídá za kvalitu dodávek k zákazníkovi, včasné řešení reklamací, náklady na nekvalitu a auditní disciplínu.' },
-  ci:   { color:'#00875A', icon:'💡', emojis:['💶','🛠','📈','🤝'],
-          desc:'Continuous Improvement Manager odpovídá za realizované úspory, tok zlepšovacích návrhů, plnění CI projektů a zapojení zaměstnanců.' },
-  fin:  { color:'#B7791F', icon:'📈', emojis:['🧾','🗓','🔮','⏳'],
-          desc:'Finance Manager odpovídá za plnění rozpočtu, včasnou měsíční uzávěrku, přesnost forecastu a inkaso pohledávek.' },
+  qua:  { color:'#C0392B', icon:'🔍', emojis:['🎯','📋','💸','🕵','📑','🔁'],
+          desc:'Quality Manager (Roman) odpovídá za zákaznické PPM, uzavírání reklamací a akčních plánů v termínu, recovery nákladů na kvalitu, plnění plánu interních auditů a včasnost PPAP.' },
+  ci:   { color:'#00875A', icon:'💡', emojis:['⏰','💶','📈','🎯'],
+          desc:'Continuous Improvement (Hanka + Tomáš) odpovídá za plnění úloh z action planu v termínu, úspory vůči ovlivnitelným nákladům a dodržení plánu CI programů.' },
+  fin:  { color:'#B7791F', icon:'📈', emojis:['🧾','🔮','🛒','📤'],
+          desc:'Finance Manager (Radek) odpovídá za report měsíčních nákladů, přesnost outlooku vůči reálnému EBIT, včasné zpracování objednávek a vystavení PAT.' },
 };
 
 // Role → how it is described in the Legenda
@@ -797,6 +807,8 @@ const ROLE_LEGEND = {
 // ─── UNIT HELPERS ────────────────────────────────────────────────────────────
 // Every KPI carries an optional `unit` ('€', 'ks', 'ppm', 'dní'); '%' is default.
 function kpiUnit(kpi) { return (kpi && kpi.unit) ? kpi.unit : '%'; }
+// Per-KPI weight as shown to users: 25 for 4 KPIs, 16,7 for 6
+function fmtWeight(w) { return (Math.round(w * 10) / 10).toFixed(1).replace('.0', '').replace('.', ','); }
 function uSuffix(kpi) { return ' ' + kpiUnit(kpi); }
 function fmtUnitVal(v, kpi) {
   if (v === null || v === undefined || isNaN(v)) return '—';
@@ -1802,7 +1814,7 @@ function renderDept(deptId, slideId) {
     const apStatus = last && last.apAction ? `<span class="ap-badge">AP: ${last.apAction.slice(0,20)}...</span>` : '';
     ovHtml += `<tr>
       <td class="ov-num c">${i+1}</td>
-      <td><strong>${kpi.name}</strong><span class="pill">${kpi.weight} %</span>${apStatus}<br><span style="font-size:11px;color:var(--muted)">${kpi.sub}</span></td>
+      <td><strong>${kpi.name}</strong><span class="pill">${fmtWeight(kpi.weight)} %</span>${apStatus}<br><span style="font-size:11px;color:var(--muted)">${kpi.sub}</span></td>
       <td class="c" id="rv-${kpi.id}" style="font-weight:700">${fmtVal(cur, kpi)}</td>
       <td class="c">${kpi.lb?'≤':'≥'} ${kpi.target}${uSuffix(kpi)}</td>
       <td class="c">${kpi.lb?'≤':'≥'} ${kpi.min}${uSuffix(kpi)}</td>
@@ -1874,8 +1886,9 @@ function renderDept(deptId, slideId) {
   // Tasks/Action Plan panel
   const tasksHtml = renderTasksPanel(deptId);
 
-  // People Development panel (informative, no bonus)
-  const peopleDevHtml = renderPeopleDevPanel(deptId);
+  // People Development panel (informative, no bonus) — only for departments
+  // that manage a team; CI and Finance opt out via dept.peopleDev === false
+  const peopleDevHtml = dept.peopleDev === false ? '' : renderPeopleDevPanel(deptId);
 
   el.innerHTML = cardsHtml + entryFormHtml + apHtml + chartsHtml + ovHtml + changelogHtml + peopleDevHtml + tasksHtml + bonusHtml;
 }
@@ -1920,8 +1933,8 @@ function renderBonus(deptId) {
         </div>
         <div class="rag-legend-body">
           <div class="rag-legend-intro">
-            Každé KPI má pevně dané pásmo hodnocení. Skóre KPI se transformuje na % bonusu, který se násobí váhou KPI (25 %).
-            Součet ze všech 4 KPI dává <strong>celkové plnění bonusu</strong>. Maximum (100 %) odpovídá variabilní složce <strong>${MAX_VS} % ze základní mzdy</strong>.
+            Každé KPI má pevně dané pásmo hodnocení. Skóre KPI se transformuje na % bonusu, který se násobí váhou KPI (${fmtWeight(100 / dept.kpis.length)} %).
+            Součet ze všech ${dept.kpis.length} KPI dává <strong>celkové plnění bonusu</strong>. Maximum (100 %) odpovídá variabilní složce <strong>${MAX_VS} % ze základní mzdy</strong>.
           </div>
 
           <div class="rag-scale">
@@ -1993,7 +2006,7 @@ function renderBonus(deptId) {
       <div class="bonus-total">
         <div>
           <div class="bonus-total-label">Celkové plnění bonusu</div>
-          <div class="bonus-formula">Součet příspěvků ze všech 4 KPI</div>
+          <div class="bonus-formula">Součet příspěvků ze všech ${dept.kpis.length} KPI</div>
         </div>
         <div style="text-align:right">
           <div class="bonus-total-val" style="color:${col}">${totalPct.toFixed(1)} %</div>
@@ -2531,7 +2544,7 @@ function buildLegendaHtml() {
         <div class="leg-section-icon" style="background:${meta.color}">${meta.icon}</div>
         <div>
           <h3>KPI ${dept.label}</h3>
-          <div class="sec-sub">${dept.kpis.length} KPI · váha 25 % každé · max VS ${(dept.varPct*100).toFixed(1).replace('.',',')} % ze základní mzdy</div>
+          <div class="sec-sub">${dept.kpis.length} KPI · váha ${fmtWeight(100 / dept.kpis.length)} % každé · max VS ${(dept.varPct*100).toFixed(1).replace('.',',')} % ze základní mzdy</div>
         </div>
       </div>
       <p>${meta.desc}</p>
@@ -2563,7 +2576,7 @@ function buildLegendaHtml() {
         <div class="sec-sub">Jak se z hodnot KPI vypočítává bonus manažera</div>
       </div>
     </div>
-    <p>Každé KPI má váhu 25 % a transformuje se do <strong>% bonusu pásma</strong> podle dosaženého výsledku (RAG legenda níže). Součet ze všech 4 KPI dává celkové plnění bonusu, které je vynásobeno maximální variabilní složkou.</p>
+    <p>Každé KPI má svou váhu — 25 % u oddělení se 4 KPI, 16,7 % u Quality se 6 KPI — a transformuje se do <strong>% bonusu pásma</strong> podle dosaženého výsledku (RAG legenda níže). Součet příspěvků ze všech KPI oddělení dává celkové plnění bonusu, které je vynásobeno maximální variabilní složkou.</p>
     <div class="leg-formula">
       <div class="formula-box">Váha KPI (25 %)</div>
       <span class="formula-op">×</span>
