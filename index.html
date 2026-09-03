@@ -393,14 +393,6 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
 .ap-inp:focus{outline:none;border-color:var(--amber)}
 
 /* OVERVIEW TABLE */
-.ov-table{width:100%;border-collapse:collapse;font-size:13px}
-.ov-table th{background:var(--dark);color:white;padding:9px 14px;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;text-align:left}
-.ov-table th.c{text-align:center}
-.ov-table td{padding:10px 14px;border-bottom:1px solid var(--border)}
-.ov-table tr:last-child td{border-bottom:none}
-.ov-table tr:hover td{background:#F8FAFC}
-.ov-table td.c{text-align:center}
-.ov-num{font-size:11px;color:var(--muted)}
 .pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--bg);color:var(--muted);margin-left:4px}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
 .dg{background:var(--green)}.da{background:var(--amber)}.dr{background:var(--red)}.dgr{background:#bbb}
@@ -470,6 +462,28 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
 /* AP OPEN */
 .ap-open{background:#FFFBF0;border-left:3px solid var(--amber);padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;margin-top:4px}
 .ap-open strong{color:#8B5E00}
+
+/* DEPARTMENT SUB-NAV */
+.dept-nav{display:flex;gap:6px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:var(--shadow-sm)}
+.dept-nav-btn{border:none;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);padding:8px 16px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .15s,color .15s}
+.dept-nav-btn:hover{background:var(--bg);color:var(--text)}
+.dept-nav-btn.on{background:linear-gradient(135deg,#1F3864,#2E5090);color:#fff;box-shadow:0 2px 6px rgba(31,56,100,.25)}
+.dn-count{font-size:10px;font-weight:800;padding:1px 7px;border-radius:10px;background:var(--bg);color:var(--text-secondary)}
+.dept-nav-btn.on .dn-count{background:rgba(255,255,255,.22);color:#fff}
+.dn-count.warn{background:var(--red);color:#fff}
+.dept-nav-btn.on .dn-count.warn{background:#fff;color:var(--red)}
+.dsec{display:none;flex-direction:column;gap:16px}
+.dsec.on{display:flex}
+
+/* ENRICHED KPI CARD */
+.kc-head{display:flex;align-items:flex-start;gap:8px}
+.kc-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);line-height:1.35;flex:1}
+.kc-weight{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:9px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.06);color:var(--text-secondary);flex:none;white-space:nowrap}
+.kc-value-row{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-top:2px}
+.kc-meta{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:10.5px;color:var(--muted);margin-top:7px}
+.kc-meta b{color:var(--text-secondary);font-weight:700}
+.kc-foot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:9px;border-top:1px dashed rgba(0,0,0,.10)}
+.kc-hint{font-size:10px;color:var(--mid);font-weight:600;margin-left:auto}
 
 /* PLANT OVERVIEW */
 .ov-hero{background:linear-gradient(135deg,#1F3864,#2E5090);color:#fff;border-radius:12px;padding:20px 24px;box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -1045,9 +1059,7 @@ function getBand(val, kpi) {
   band.attainment = attainment;
   return band;
 }
-const SL = { green:'Splněno', amber:'Na hraně', red:'Nesplněno', gray:'Bez dat' };
 const MB = { green:'mb-g', amber:'mb-a', red:'mb-r', gray:'mb-n' };
-const DC = { green:'dg', amber:'da', red:'dr', gray:'dgr' };
 const VC = { green:'cv-green', amber:'cv-amber', red:'cv-red', gray:'' };
 function fmtVal(v, kpi) {
   return fmtUnitVal(v, kpi);
@@ -1090,7 +1102,6 @@ function getBandClass(band) {
   const map = {'Výborný':'sl-excellent','Splněno':'sl-good','Částečně':'sl-warning','Nesplněno':'sl-danger'};
   return map[band.label] || '';
 }
-function getTLHtml(band) { return ''; }
 
 
 
@@ -1794,6 +1805,25 @@ function escapeHtml(s) {
 function escapeAttr(s) { return escapeHtml(s); }
 
 
+// ─── DEPARTMENT SUB-SECTIONS ─────────────────────────────────────────────────
+// A department detail is long, so it is split into sections shown one at a
+// time. The choice is per department and survives re-renders.
+const DEPT_SECTION = {};
+function deptSection(deptId) {
+  let sec = DEPT_SECTION[deptId] || 'kpi';
+  if (sec === 'team' && DEPTS[deptId].peopleDev === false) sec = 'kpi';
+  return sec;
+}
+function setDeptSection(deptId, sec) {
+  DEPT_SECTION[deptId] = sec;
+  const slide = document.getElementById(slideOf(deptId));
+  if (!slide) return;
+  slide.querySelectorAll('.dsec').forEach(d => d.classList.toggle('on', d.dataset.sec === sec));
+  slide.querySelectorAll('.dept-nav-btn').forEach(b => b.classList.toggle('on', b.dataset.sec === sec));
+  // charts can only measure themselves once their section is visible
+  if (sec === 'kpi') setTimeout(() => buildCharts(deptId), 30);
+}
+
 function renderDept(deptId, slideId) {
   const dept = DEPTS[deptId];
   const el = document.getElementById(slideId);
@@ -1814,28 +1844,43 @@ function renderDept(deptId, slideId) {
     lastUpdateBar = `<div class="update-bar update-bar-empty"><span class="update-icon">⏳</span> Žádná data nebyla zatím zadána pro ${dept.label}</div>`;
   }
 
-  let cardsHtml = lastUpdateBar + `<div class="hint-bar">&#9432;&nbsp; Klikni na KPI kartu pro zadání hodnoty s komentářem a důkazem. Bez evidence zůstane stav <span style="color:#E65100;font-weight:700">⚠ Čeká na verifikaci</span>.</div><div class="kpi-row">`;
+  // KPI cards carry the full picture — value, band, target/min, YTD, trend,
+  // evidence state and any open action plan — so no separate table is needed.
+  const cols = (dept.kpis.length > 4 && dept.kpis.length % 3 === 0) ? 3 : Math.min(dept.kpis.length, 4);
+  let cardsHtml = `<div class="kpi-row" style="grid-template-columns:repeat(${cols},1fr)">`;
   dept.kpis.forEach(kpi => {
     const cur = getCurrentValue(kpi);
-    const s = getStatus(cur, kpi);
-    const entries = (store.entries||[]).filter(e=>e.kpiId===kpi.id);
-    const lastEntry = entries[0];
-    const hasEvidence = lastEntry && lastEntry.evidenceType && lastEntry.evidenceType !== 'none';
-    const evIcon = !lastEntry ? '' : hasEvidence ? '<span class="evidence-flag" title="Evidence přiložena">✅</span>' : '<span class="evidence-flag" title="Čeká na verifikaci">⚠️</span>';
-    const band_card = getBand(cur, kpi);
-    const tlHtml = getTLHtml(band_card);
-    const displayStatus = !lastEntry ? s : (!hasEvidence ? 'pending' : s);
+    const st = getStatus(cur, kpi);
+    const kEntries = (store.entries || []).filter(e => e.kpiId === kpi.id);
+    const last = kEntries[0];
+    const hasEvidence = last && last.evidenceType && last.evidenceType !== 'none';
+    const band = getBand(cur, kpi);
+    const bandCls = getBandClass(band);
 
-    const bandCls = getBandClass(band_card);
-    cardsHtml += `<div class="kpi-card ${kpi.color} ${bandCls}" id="card-${kpi.id}" onclick="openEntry('${deptId}','${kpi.id}')">
-      ${evIcon}
-      <div class="kpi-label">${kpi.name}</div>
-      <div class="kpi-value ${VC[s]}" id="val-${kpi.id}">${fmtVal(cur, kpi)}</div>
-      <div class="kpi-sub">
-        <span class="mini-badge ${displayStatus==='pending'?'mb-pending':MB[s]}" id="badge-${kpi.id}">${displayStatus==='pending'?'⚠ Čeká na verifikaci':SL[s]}</span>
-        &nbsp;Target ${kpi.lb?'≤':'≥'} ${kpi.target}${uSuffix(kpi)}
+    const evBadge = !last
+      ? '<span class="ev-badge ev-none">Bez záznamu</span>'
+      : hasEvidence
+        ? `<span class="ev-badge ev-verified" onclick="event.stopPropagation();showEvDetail('${kpi.id}')" style="cursor:pointer">✓ Ověřeno</span>`
+        : `<span class="ev-badge ev-pending" onclick="event.stopPropagation();showEvDetail('${kpi.id}')" style="cursor:pointer">⚠ Čeká na verifikaci</span>`;
+    const apBadge = last && last.apAction
+      ? `<span class="ap-badge" title="${escapeHtml(last.apAction)}">AP otevřen</span>` : '';
+
+    cardsHtml += `<div class="kpi-card ${kpi.color} ${bandCls}" id="card-${kpi.id}" onclick="openEntry('${deptId}','${kpi.id}')" title="${escapeHtml(kpi.sub)}">
+      <div class="kc-head">
+        <span class="kc-name">${kpi.name}</span>
+        <span class="kc-weight">${fmtWeight(kpi.weight)} %</span>
       </div>
-      <div class="kpi-hint" id="tr-${kpi.id}">${trendTxt(kpi.data,kpi.lb)} · YTD ø ${ytd(kpi.data, kpi)}</div>
+      <div class="kc-value-row">
+        <span class="kpi-value ${VC[st]}" id="val-${kpi.id}">${fmtVal(cur, kpi)}</span>
+        <span class="mini-badge ${MB[st]}" id="badge-${kpi.id}">${band.label}${band.label === 'Bez dat' ? '' : ' · ' + band.pct + ' % bonusu'}</span>
+      </div>
+      <div class="kc-meta">
+        <span>Target <b>${kpi.lb ? '≤' : '≥'} ${kpi.target}${uSuffix(kpi)}</b></span>
+        <span>Min <b>${kpi.lb ? '≤' : '≥'} ${kpi.min}${uSuffix(kpi)}</b></span>
+        <span>YTD ø <b>${ytd(kpi.data, kpi)}</b></span>
+        <span id="tr-${kpi.id}">${trendTxt(kpi.data, kpi.lb)}</span>
+      </div>
+      <div class="kc-foot">${evBadge}${apBadge}<span class="kc-hint">Zadat →</span></div>
     </div>`;
   });
   cardsHtml += '</div>';
@@ -1852,32 +1897,6 @@ function renderDept(deptId, slideId) {
     chartsHtml += `<div><span class="section-title">${kpi.name}</span><div class="chart-wrap" style="height:170px"><canvas id="ch-${kpi.id}" role="img" aria-label="Trend ${kpi.name}"></canvas></div></div>`;
   });
   chartsHtml += '</div></div></div>';
-
-  // Overview table
-  let ovHtml = `<div class="panel"><div class="panel-header"><span>Přehled KPI — stav &amp; verifikace</span></div><div class="panel-body" style="padding:0"><table class="ov-table"><thead><tr>
-    <th style="width:28px">#</th><th>KPI</th><th class="c">Aktuální</th><th class="c">Target</th><th class="c">Min</th><th class="c">YTD ø</th><th class="c">Pásmo</th><th class="c">Evidence</th><th class="c">Stav</th>
-  </tr></thead><tbody id="ov-${deptId}">`;
-  dept.kpis.forEach((kpi,i) => {
-    const cur = getCurrentValue(kpi);
-    const s = getStatus(cur, kpi);
-    const band = getBand(cur, kpi);
-    const entries = (store.entries||[]).filter(e=>e.kpiId===kpi.id);
-    const last = entries[0];
-    const evStatus = !last ? '<span class="ev-badge ev-none">Bez záznamu</span>' : last.evidenceType==='none'||!last.evidenceType ? `<span class="ev-badge ev-pending" onclick="showEvDetail('${kpi.id}')" style="cursor:pointer">⚠ Čeká</span>` : `<span class="ev-badge ev-verified" onclick="showEvDetail('${kpi.id}')" style="cursor:pointer">✓ Ověřeno</span>`;
-    const apStatus = last && last.apAction ? `<span class="ap-badge">AP: ${last.apAction.slice(0,20)}...</span>` : '';
-    ovHtml += `<tr>
-      <td class="ov-num c">${i+1}</td>
-      <td><strong>${kpi.name}</strong><span class="pill">${fmtWeight(kpi.weight)} %</span>${apStatus}<br><span style="font-size:11px;color:var(--muted)">${kpi.sub}</span></td>
-      <td class="c" id="rv-${kpi.id}" style="font-weight:700">${fmtVal(cur, kpi)}</td>
-      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.target}${uSuffix(kpi)}</td>
-      <td class="c">${kpi.lb?'≤':'≥'} ${kpi.min}${uSuffix(kpi)}</td>
-      <td class="c" id="ytd-ov-${kpi.id}">${ytd(kpi.data, kpi)}</td>
-      <td class="c" id="band-${kpi.id}"><strong>${band.label}</strong><br><span style="font-size:10px;color:var(--muted)">${band.pct} % bonusu</span></td>
-      <td class="c" id="ev-${kpi.id}">${evStatus}</td>
-      <td class="c" id="rvs-${kpi.id}"><span class="dot ${DC[s]}"></span>${SL[s]}</td>
-    </tr>`;
-  });
-  ovHtml += '</tbody></table></div></div>';
 
   // Changelog HTML — last 5 changes for this dept
   const deptEntries = (store.entries || []).filter(e => e.deptId === deptId).slice(0, 5);
@@ -1899,7 +1918,7 @@ function renderDept(deptId, slideId) {
       const evBadge = e.evidenceType==='none'||!e.evidenceType
         ? '<span class="ev-badge ev-none">Bez evidence</span>'
         : `<span class="ev-badge ev-verified" onclick="showEvDetail('${e.kpiId}')" style="cursor:pointer">✓ Ověřeno</span>`;
-      const valStr = (e.value!==null&&e.value!==undefined) ? e.value.toFixed(2)+' %' : '—';
+      const valStr = fmtUnitVal(e.value, kpiO);
       const comm = e.comment ? `<div class="cl-comment">"${e.comment}"</div>` : '';
       changelogHtml += `<tr>
         <td><span class="cl-time">${dStr}</span></td>
@@ -1943,7 +1962,36 @@ function renderDept(deptId, slideId) {
   // that manage a team; CI and Finance opt out via dept.peopleDev === false
   const peopleDevHtml = dept.peopleDev === false ? '' : renderPeopleDevPanel(deptId);
 
-  el.innerHTML = cardsHtml + entryFormHtml + apHtml + chartsHtml + ovHtml + changelogHtml + peopleDevHtml + tasksHtml + bonusHtml;
+  // ── sub-navigation: one section visible at a time ──────────────────────────
+  const sec = deptSection(deptId);
+  const on = k => k === sec ? ' on' : '';
+  const tasks = getDeptTasks(deptId);
+  const openTasks = tasks.filter(t => t.status !== 'done').length;
+  const overdue = tasks.filter(t => isOverdue(t)).length;
+  const openApCount = openAps.length;
+  const workCount = openTasks + openApCount;
+  const bonusPct = dept.kpis.reduce((a, k) => a + (k.weight / 100) * getBand(getCurrentValue(k), k).pct, 0);
+  const anyData = dept.kpis.some(k => getCurrentValue(k) !== null);
+
+  const btn = (key, label, badge) =>
+    `<button type="button" class="dept-nav-btn${on(key)}" data-sec="${key}" onclick="setDeptSection('${deptId}','${key}')">${label}${badge || ''}</button>`;
+
+  const navHtml = `<div class="dept-nav">
+    ${btn('kpi', '📊 KPI &amp; trendy', `<span class="dn-count">${dept.kpis.length}</span>`)}
+    ${btn('tasks', '✅ Úkoly', workCount ? `<span class="dn-count${overdue ? ' warn' : ''}">${workCount}</span>` : '')}
+    ${dept.peopleDev === false ? '' : btn('team', '👥 Tým')}
+    ${btn('bonus', '💰 Bonus', `<span class="dn-count">${anyData ? bonusPct.toFixed(0) + ' %' : '—'}</span>`)}
+    ${btn('log', '📝 Historie')}
+  </div>`;
+
+  const hintBar = `<div class="hint-bar">&#9432;&nbsp; Klikni na KPI kartu pro zadání hodnoty s komentářem a důkazem. Bez evidence zůstane stav <span style="color:#E65100;font-weight:700">⚠ Čeká na verifikaci</span>.</div>`;
+
+  el.innerHTML = lastUpdateBar + navHtml
+    + `<div class="dsec${on('kpi')}" data-sec="kpi">` + hintBar + cardsHtml + entryFormHtml + chartsHtml + `</div>`
+    + `<div class="dsec${on('tasks')}" data-sec="tasks">` + apHtml + tasksHtml + `</div>`
+    + (dept.peopleDev === false ? '' : `<div class="dsec${on('team')}" data-sec="team">` + peopleDevHtml + `</div>`)
+    + `<div class="dsec${on('bonus')}" data-sec="bonus">` + bonusHtml + `</div>`
+    + `<div class="dsec${on('log')}" data-sec="log">` + changelogHtml + `</div>`;
 }
 
 function renderBonus(deptId) {
@@ -1979,80 +2027,7 @@ function renderBonus(deptId) {
     <div class="bonus-header">💰 Výpočet variabilní složky — aktuální měsíc</div>
     <div class="bonus-body">
 
-      <div class="rag-legend-panel" style="margin-bottom:18px">
-        <div class="rag-legend-header">
-          <h3>🚦 Legenda hodnocení &amp; RAG škála</h3>
-          <span class="badge-info">Jednotná škála napříč celým dashboardem</span>
-        </div>
-        <div class="rag-legend-body">
-          <div class="rag-legend-intro">
-            Každé KPI má pevně dané pásmo hodnocení. Skóre KPI se transformuje na % bonusu, který se násobí váhou KPI (${fmtWeight(100 / dept.kpis.length)} %).
-            Součet ze všech ${dept.kpis.length} KPI dává <strong>celkové plnění bonusu</strong>. Maximum (100 %) odpovídá variabilní složce <strong>${MAX_VS} % ze základní mzdy</strong>.
-          </div>
-
-          <div class="rag-scale">
-            <div class="rag-zone" style="flex:35;background:linear-gradient(90deg,#B91C1C,#DE350B)">
-              <span class="rag-zone-label">🔴 Nesplněno</span>
-              <span class="rag-zone-desc">0 % bonusu</span>
-            </div>
-            <div class="rag-zone" style="flex:25;background:linear-gradient(90deg,#D97706,#FF8B00)">
-              <span class="rag-zone-label">🟡 Částečně</span>
-              <span class="rag-zone-desc">50 % bonusu</span>
-            </div>
-            <div class="rag-zone" style="flex:40;background:linear-gradient(90deg,#00875A,#36B37E)">
-              <span class="rag-zone-label">🟢 Výborný / Splněno</span>
-              <span class="rag-zone-desc">100 % bonusu</span>
-            </div>
-          </div>
-          <div class="rag-axis"><span>Pod tolerancí</span><span>Min threshold</span><span>Target</span><span>100 %+</span></div>
-
-          <div class="rag-grid">
-            <div class="rag-card zone-green">
-              <div class="rag-card-head">
-                <span class="rag-icon">🟢</span>
-                <span class="rag-card-title">Výborný</span>
-                <span class="rag-card-value" style="color:var(--green)">100 %</span>
-              </div>
-              <div class="rag-card-desc">Dosažen plný Target — KPI je v ideálním stavu, není potřeba zásah.</div>
-            </div>
-            <div class="rag-card zone-green">
-              <div class="rag-card-head">
-                <span class="rag-icon">🟢</span>
-                <span class="rag-card-title">Splněno</span>
-                <span class="rag-card-value" style="color:var(--green)">100 %</span>
-              </div>
-              <div class="rag-card-desc">Hodnota mezi Min a Target — manažer dostává plný bonus.</div>
-            </div>
-            <div class="rag-card zone-amber">
-              <div class="rag-card-head">
-                <span class="rag-icon">🟡</span>
-                <span class="rag-card-title">Částečně</span>
-                <span class="rag-card-value" style="color:var(--amber)">50 %</span>
-              </div>
-              <div class="rag-card-desc">Pod Min thresholdem, ale ještě v toleranci — povinný Action Plan.</div>
-            </div>
-            <div class="rag-card zone-red">
-              <div class="rag-card-head">
-                <span class="rag-icon">🔴</span>
-                <span class="rag-card-title">Nesplněno</span>
-                <span class="rag-card-value" style="color:var(--red)">0 %</span>
-              </div>
-              <div class="rag-card-desc">Pod tolerancí — bonus se neuděluje, vyžaduje okamžitý zásah.</div>
-            </div>
-          </div>
-
-          <div class="rag-modifier-row">
-            <div class="rag-mod-card" style="border-left-color:var(--mid)">
-              <span class="rag-mod-icon">📊</span>
-              <div class="rag-mod-text"><strong>Vzorec:</strong> Váha KPI (25 %) × % bonusu pásma = příspěvek k celkovému plnění</div>
-            </div>
-            <div class="rag-mod-card" style="border-left-color:var(--purple)">
-              <span class="rag-mod-icon">📎</span>
-              <div class="rag-mod-text"><strong>Evidence povinná:</strong> i pro zelené výsledky — screenshot, URL nebo číslo reportu</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="hint-bar" style="margin-bottom:16px">&#9432;&nbsp; Váha KPI × % bonusu pásma = příspěvek. Součet příspěvků × max ${MAX_VS} % = variabilní složka. Detailní popis pásem najdeš v záložce <strong>📖 Legenda</strong>.</div>
 
       <div class="bonus-grid">${cardsHtml}</div>
 
