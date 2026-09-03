@@ -486,42 +486,44 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
 .kc-hint{font-size:10px;color:var(--mid);font-weight:600;margin-left:auto}
 
 /* PLANT OVERVIEW */
-.ov-hero{background:linear-gradient(135deg,#1F3864,#2E5090);color:#fff;border-radius:12px;padding:20px 24px;box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.ov-hero h2{font-size:18px;font-weight:600;letter-spacing:.2px}
-.ov-hero-sub{font-size:12px;opacity:.8;margin-top:3px}
-.ov-hero-counts{display:flex;gap:10px;flex-wrap:wrap}
-.ov-count{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;text-align:center;min-width:88px}
-.ov-count-val{font-size:22px;font-weight:800;line-height:1}
-.ov-count-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;opacity:.85;margin-top:4px}
-.ov-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
-.ov-tile{background:var(--card);border:1px solid var(--border);border-left:6px solid var(--border-strong);border-radius:12px;padding:18px 20px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:14px;text-align:left;font:inherit;color:inherit;width:100%}
+.ov-hero{background:linear-gradient(135deg,#1F3864,#2E5090);color:#fff;border-radius:14px;padding:28px 32px;box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap}
+.ov-hero h2{font-size:26px;font-weight:600;letter-spacing:.2px;line-height:1.2}
+.ov-hero-sub{font-size:14px;opacity:.82;margin-top:6px}
+.ov-hero-counts{display:flex;gap:12px;flex-wrap:wrap;flex:1;justify-content:flex-end}
+.ov-count{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:14px 18px;text-align:center;min-width:118px}
+.ov-count-val{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.ov-count-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;opacity:.9;margin-top:7px;font-weight:600}
+.ov-count.zero .ov-count-val{opacity:.42}
+.ov-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px}
+@media(min-width:1640px){.ov-tiles{grid-template-columns:repeat(3,1fr)}}
+.ov-tile{background:var(--card);border:1px solid var(--border);border-left:7px solid var(--border-strong);border-radius:14px;padding:24px 26px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:18px;text-align:left;font:inherit;color:inherit;width:100%;min-height:290px}
 .ov-tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
 .ov-tile:focus-visible{outline:3px solid var(--mid);outline-offset:2px}
 .ov-tile.t-green{border-left-color:var(--green);background:linear-gradient(135deg,var(--green-dim),transparent 55%)}
 .ov-tile.t-amber{border-left-color:var(--amber);background:linear-gradient(135deg,var(--amber-dim),transparent 55%)}
 .ov-tile.t-red{border-left-color:var(--red);background:linear-gradient(135deg,var(--red-dim),transparent 55%)}
 .ov-tile-head{display:flex;align-items:center;gap:12px}
-.ov-tile-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;flex:none}
-.ov-tile-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.25}
-.ov-tile-owner{font-size:11px;color:var(--muted);margin-top:2px}
-.ov-status{margin-left:auto;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:6px 12px;border-radius:20px;white-space:nowrap;flex:none}
+.ov-tile-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:25px;color:#fff;flex:none}
+.ov-tile-name{font-size:19px;font-weight:700;color:var(--text);line-height:1.25}
+.ov-tile-owner{font-size:12.5px;color:var(--muted);margin-top:3px}
+.ov-status{margin-left:auto;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:8px 15px;border-radius:20px;white-space:nowrap;flex:none}
 .ov-status.t-green{background:var(--green);color:#fff}
 .ov-status.t-amber{background:var(--amber);color:#fff}
 .ov-status.t-red{background:var(--red);color:#fff}
 .ov-status.t-gray{background:#E2E8F0;color:var(--muted)}
 .ov-score{display:flex;align-items:baseline;gap:10px}
-.ov-score-val{font-size:38px;font-weight:800;line-height:1}
-.ov-score-lbl{font-size:11px;color:var(--muted);line-height:1.4}
-.ov-bar{height:8px;border-radius:5px;background:#E2E8F0;overflow:hidden}
+.ov-score-val{font-size:56px;font-weight:800;line-height:1;letter-spacing:-1.5px}
+.ov-score-lbl{font-size:12.5px;color:var(--muted);line-height:1.45}
+.ov-bar{height:11px;border-radius:6px;background:#E2E8F0;overflow:hidden}
 .ov-bar-fill{height:100%;border-radius:5px}
 .ov-chips{display:flex;flex-wrap:wrap;gap:6px}
-.ov-chip{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:20px;background:var(--bg);border:1px solid var(--border);color:var(--text-secondary)}
-.ov-dot{width:8px;height:8px;border-radius:50%;flex:none}
-.ov-chip-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
-.ov-tile-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:11px;color:var(--muted);border-top:1px dashed var(--border);padding-top:10px}
+.ov-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;background:var(--bg);border:1px solid var(--border);color:var(--text-secondary)}
+.ov-dot{width:10px;height:10px;border-radius:50%;flex:none}
+.ov-chip-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:210px}
+.ov-tile-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--border);padding-top:14px}
 .ov-foot-warn{color:#B45309;font-weight:700}
 .ov-foot-bad{color:var(--red);font-weight:700}
-.ov-cta{margin-left:auto;font-size:11px;font-weight:700;color:var(--mid)}
+.ov-cta{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--mid)}
 .ov-empty{background:var(--card);border:1px dashed var(--border-strong);border-radius:12px;padding:28px;text-align:center;color:var(--muted);font-size:13px}
 @media(max-width:900px){.ov-tiles{grid-template-columns:1fr}}
 
@@ -2584,12 +2586,8 @@ function renderOverview() {
       <div class="ov-hero-sub">${depts.length} oddělení · klikni na dlaždici pro detailní KPI oddělení</div>
     </div>
     <div class="ov-hero-counts">
-      <div class="ov-count"><div class="ov-count-val">${counts.green}</div><div class="ov-count-lbl">🟢 Plní</div></div>
-      <div class="ov-count"><div class="ov-count-val">${counts.amber}</div><div class="ov-count-lbl">🟠 Na hraně</div></div>
-      <div class="ov-count"><div class="ov-count-val">${counts.red}</div><div class="ov-count-lbl">🔴 Neplní</div></div>
-      <div class="ov-count"><div class="ov-count-val">${counts.gray}</div><div class="ov-count-lbl">⚪ Bez dat</div></div>
-      <div class="ov-count"><div class="ov-count-val">${totalOverdue}</div><div class="ov-count-lbl">Úkoly po termínu</div></div>
-      <div class="ov-count"><div class="ov-count-val">${totalPending}</div><div class="ov-count-lbl">Čeká na evidenci</div></div>
+      ${[['🟢 Plní', counts.green], ['🟠 Na hraně', counts.amber], ['🔴 Neplní', counts.red], ['⚪ Bez dat', counts.gray], ['Úkoly po termínu', totalOverdue], ['Čeká na evidenci', totalPending]]
+        .map(([lbl, n]) => `<div class="ov-count${n === 0 ? ' zero' : ''}"><div class="ov-count-val">${n}</div><div class="ov-count-lbl">${lbl}</div></div>`).join('')}
     </div>
   </div>`;
 
