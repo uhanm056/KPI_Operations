@@ -543,7 +543,7 @@ textarea.m-inp{resize:vertical;min-height:60px;font-size:12px;font-weight:400}
       <label class="login-label">Uživatel</label>
       <select class="login-input" id="login-user">
         <option value="">— vyberte uživatele —</option>
-        <option value="David Varhan">David Varhan (ME Manager)</option>
+        <option value="David Varhan">David Varhan (Manufacturing Engineering)</option>
         <option value="Milan Lízala">Milan Lízala (Logistics Manager)</option>
         <option value="Production Manager">Production Manager</option>
         <option value="Roman Zúbek">Roman Zúbek (Quality Manager)</option>
@@ -863,13 +863,13 @@ const DEPT_META = {
 
 // Role → how it is described in the Legenda
 const ROLE_LEGEND = {
-  me:   { emoji:'🔧', text:'ME Manager — vidí a edituje pouze Manufacturing Engineering KPI a tasky.' },
-  log:  { emoji:'📦', text:'Logistics Manager — vidí a edituje pouze Logistics KPI a tasky.' },
-  prod: { emoji:'🏭', text:'Production Manager — vidí a edituje pouze Production KPI a tasky.' },
-  qua:  { emoji:'🔍', text:'Quality Manager — vidí a edituje pouze Quality KPI a tasky.' },
-  ci:   { emoji:'💡', text:'CI Manager — vidí a edituje pouze Continuous Improvement KPI a tasky.' },
-  fin:  { emoji:'📈', text:'Finance Manager — vidí a edituje pouze Finance KPI a tasky.' },
-  om:   { emoji:'👔', text:'Plant Manager — admin přístup, přehled plantu, všech 6 oddělení + možnost resetu hesla.' },
+  me:   { emoji:'🔧', text:'Manufacturing Engineering — vidí a edituje pouze KPI a tasky tohoto oddělení.' },
+  log:  { emoji:'📦', text:'Logistics — vidí a edituje pouze KPI a tasky tohoto oddělení.' },
+  prod: { emoji:'🏭', text:'Production — vidí a edituje pouze KPI a tasky tohoto oddělení.' },
+  qua:  { emoji:'🔍', text:'Quality — vidí a edituje pouze KPI a tasky tohoto oddělení.' },
+  ci:   { emoji:'💡', text:'Continuous Improvement — vidí a edituje pouze KPI a tasky tohoto oddělení.' },
+  fin:  { emoji:'📈', text:'Finance — vidí a edituje pouze KPI a tasky tohoto oddělení.' },
+  om:   { emoji:'👔', text:'Admin přístup — přehled plantu, všech 6 oddělení a reset hesel.' },
 };
 
 // ─── UNIT HELPERS ────────────────────────────────────────────────────────────
@@ -2943,7 +2943,7 @@ function buildLegendaHtml() {
 // Users — passwords are NOT stored in code; they are created by users on first login
 // and stored as SHA-256 hashes in Firebase under /users/{username}/passwordHash
 const USERS = {
-  "David Varhan":       { role: "me",   label: "David Varhan (ME Manager)" },
+  "David Varhan":       { role: "me",   label: "David Varhan (Manufacturing Engineering)" },
   "Milan Lízala":       { role: "log",  label: "Milan Lízala (Logistics Manager)" },
   "Production Manager": { role: "prod", label: "Production Manager" },
   "Roman Zúbek":        { role: "qua",  label: "Roman Zúbek (Quality Manager)" },
